@@ -2,10 +2,16 @@
 const express = require('express');
 const config = require('../config');
 const mock = require('../services/mockData');
+const extra = require('../services/mockDataExtra');
 const { getDefaultClient } = require('../services/fmgClient');
 const logger = require('../logger');
 
 const router = express.Router();
+
+router.get('/at-risk', (req, res) => {
+  if (config.useMockData) return res.json(extra.atRisk());
+  res.status(501).json({ error: 'Live at-risk aggregation not wired yet.' });
+});
 
 /**
  * GET /api/dashboard
@@ -18,6 +24,7 @@ router.get('/', async (req, res, next) => {
     if (config.useMockData) {
       return res.json({
         summary: mock.dashboardSummary(),
+        atRisk: extra.atRisk(),
         sdwan: mock.sdwanOverlays(),
         vpn: mock.vpnTunnels(),
         ha: mock.haClusters(),
@@ -65,6 +72,7 @@ router.get('/', async (req, res, next) => {
         adoms: adoms.length,
         updatedAt: new Date().toISOString(),
       },
+      atRisk: extra.atRisk(),
       sdwan: mock.sdwanOverlays(),
       vpn: mock.vpnTunnels(),
       ha: mock.haClusters(),

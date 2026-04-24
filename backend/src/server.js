@@ -25,6 +25,8 @@ const install = require('./routes/install');
 const analyzer = require('./routes/analyzer');
 const security = require('./routes/security');
 const fabric = require('./routes/fabric');
+const scripts = require('./routes/scripts');
+const settings = require('./routes/settings');
 
 const app = express();
 
@@ -70,6 +72,8 @@ app.use('/api/install',     requireAuth, install);
 app.use('/api/analyzer',    requireAuth, analyzer);
 app.use('/api/security',    requireAuth, security);
 app.use('/api/fabric',      requireAuth, fabric);
+app.use('/api/scripts',     requireAuth, scripts);
+app.use('/api/settings',    requireAuth, settings);
 
 // ---- Serve the React build in production -------------------------------
 if (config.isProduction) {

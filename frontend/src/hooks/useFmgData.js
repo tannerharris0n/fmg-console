@@ -153,3 +153,37 @@ export function usePolicyProfiles() {
     queryFn: () => api.get('/policy/profiles'),
   });
 }
+
+// ---------- At Risk & Device detail ----------------------------------------
+
+export function useAtRisk() {
+  return useQuery({
+    queryKey: ['dashboard', 'at-risk'],
+    queryFn: () => api.get('/dashboard/at-risk'),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useDeviceDetail(name) {
+  return useQuery({
+    queryKey: ['device', name],
+    queryFn: () => api.get(`/devices/${encodeURIComponent(name)}/detail`),
+    enabled: Boolean(name),
+  });
+}
+
+// ---------- Scripts & Settings ---------------------------------------------
+
+export function useScripts() {
+  return useQuery({
+    queryKey: ['scripts'],
+    queryFn: () => api.get('/scripts'),
+  });
+}
+
+export function useSettings() {
+  return useQuery({
+    queryKey: ['settings'],
+    queryFn: () => api.get('/settings'),
+  });
+}

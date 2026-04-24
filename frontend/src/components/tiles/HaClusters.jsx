@@ -16,6 +16,7 @@ export function HaClusters({ data = [] }) {
       title="HA clusters"
       subtitle={`${data.length} pairs${atRisk ? ` · ${atRisk} at risk` : ''}`}
       icon={ShieldCheck}
+      to="/fabric/ha"
     >
       <ul className="space-y-1.5 text-[11.5px]">
         {data.map((c) => (

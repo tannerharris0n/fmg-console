@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Activity, Globe2, Target, ShieldAlert, Search } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { Tile } from '../components/common/Tile';
 import { KpiCard } from '../components/common/KpiCard';
 import { Chip } from '../components/common/Chip';
+import { useSortable, SortableTh } from '../components/common/SortableTable';
 import {
   useThreatActivity,
   useThreatEvents,
@@ -143,44 +145,56 @@ export default function Threats() {
           </div>
         }
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-[11.5px]">
-            <thead className="text-ink-400 text-[10.5px] border-b border-surface-600/60">
-              <tr>
-                <th className="py-2 px-2 font-medium">Time</th>
-                <th className="py-2 px-2 font-medium">Sev</th>
-                <th className="py-2 px-2 font-medium">Signature</th>
-                <th className="py-2 px-2 font-medium">Source</th>
-                <th className="py-2 px-2 font-medium">Target</th>
-                <th className="py-2 px-2 font-medium">Proto</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-surface-800">
-              {filtered.slice(0, 25).map((e) => (
-                <tr key={e.id} className="hover:bg-surface-800/50 transition">
-                  <td className="py-1.5 px-2 text-ink-400 tabular-nums whitespace-nowrap">{relTime(e.at)}</td>
-                  <td className="py-1.5 px-2"><Chip variant={sevTone(e.severity)}>{e.severity}</Chip></td>
-                  <td className="py-1.5 px-2">
-                    <span className="text-[10px] text-ink-400 uppercase tracking-wider mr-1.5">{e.category}</span>
-                    <span className="font-medium">{e.signature}</span>
-                  </td>
-                  <td className="py-1.5 px-2">
-                    <span className="text-[10px] text-ink-400 font-mono uppercase bg-surface-800 px-1 rounded mr-1">{e.sourceCountry}</span>
-                    <span className="code">{e.sourceIp}</span>
-                  </td>
-                  <td className="py-1.5 px-2 text-ink-200">{e.destHost}</td>
-                  <td className="py-1.5 px-2 text-ink-400"><span className="code">{e.protocol}/{e.port}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filtered.length > 25 && (
-          <div className="text-center text-[11px] text-ink-400 mt-3">
-            Showing first 25 of {filtered.length}. Refine search to narrow.
-          </div>
-        )}
+        <ThreatEventTable rows={filtered} />
       </Tile>
     </div>
+  );
+}
+
+function ThreatEventTable({ rows }) {
+  const { sorted, sort, toggle } = useSortable(rows, { key: 'at', dir: 'desc' });
+  const display = sorted.slice(0, 25);
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-[11.5px]">
+          <thead className="text-ink-400 text-[10.5px] border-b border-surface-600/60">
+            <tr>
+              <SortableTh sortKey="at"        sort={sort} onToggle={toggle}>Time</SortableTh>
+              <SortableTh sortKey="severity"  sort={sort} onToggle={toggle}>Sev</SortableTh>
+              <SortableTh sortKey="signature" sort={sort} onToggle={toggle}>Signature</SortableTh>
+              <SortableTh sortKey="sourceIp"  sort={sort} onToggle={toggle}>Source</SortableTh>
+              <SortableTh sortKey="destHost"  sort={sort} onToggle={toggle}>Target</SortableTh>
+              <SortableTh sortKey="protocol"  sort={sort} onToggle={toggle}>Proto</SortableTh>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-surface-800">
+            {display.map((e) => (
+              <tr key={e.id} className="hover:bg-surface-800/50 transition">
+                <td className="py-1.5 px-2 text-ink-400 tabular-nums whitespace-nowrap">{relTime(e.at)}</td>
+                <td className="py-1.5 px-2"><Chip variant={sevTone(e.severity)}>{e.severity}</Chip></td>
+                <td className="py-1.5 px-2">
+                  <span className="text-[10px] text-ink-400 uppercase tracking-wider mr-1.5">{e.category}</span>
+                  <span className="font-medium">{e.signature}</span>
+                </td>
+                <td className="py-1.5 px-2">
+                  <span className="text-[10px] text-ink-400 font-mono uppercase bg-surface-800 px-1 rounded mr-1">{e.sourceCountry}</span>
+                  <span className="code">{e.sourceIp}</span>
+                </td>
+                <td className="py-1.5 px-2">
+                  <Link to={`/devices/${encodeURIComponent(e.destHost)}`} className="text-ink-200 hover:text-sky-300 transition">{e.destHost}</Link>
+                </td>
+                <td className="py-1.5 px-2 text-ink-400"><span className="code">{e.protocol}/{e.port}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > 25 && (
+        <div className="text-center text-[11px] text-ink-400 mt-3">
+          Showing first 25 of {rows.length}. Refine search to narrow.
+        </div>
+      )}
+    </>
   );
 }

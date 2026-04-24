@@ -4,6 +4,7 @@ import { Link2, Users, Search } from 'lucide-react';
 import { Tile } from '../components/common/Tile';
 import { KpiCard } from '../components/common/KpiCard';
 import { Chip } from '../components/common/Chip';
+import { useSortable, SortableTh } from '../components/common/SortableTable';
 import { useIpsecTunnels, useSslVpnSessions } from '../hooks/useFmgData';
 
 function fmtUptime(sec) {
@@ -33,6 +34,10 @@ function relTime(iso) {
 
 function IpsecTab() {
   const { data = [], isLoading } = useIpsecTunnels();
+  const { sorted, sort, toggle } = useSortable(data, { key: 'name', dir: 'asc' }, {
+    traffic: (r) => r.bytesIn + r.bytesOut,
+  });
+
   if (isLoading) return <div className="text-[12px] text-ink-400 py-6 text-center">Loading tunnels...</div>;
 
   return (
@@ -40,16 +45,16 @@ function IpsecTab() {
       <table className="w-full text-left text-[12px]">
         <thead className="text-ink-400 text-[11px] border-b border-surface-600/60">
           <tr>
-            <th className="py-2 px-2 font-medium">Status</th>
-            <th className="py-2 px-2 font-medium">Tunnel</th>
-            <th className="py-2 px-2 font-medium">Peer</th>
-            <th className="py-2 px-2 font-medium">Phase 1 / 2</th>
-            <th className="py-2 px-2 font-medium">Uptime</th>
-            <th className="py-2 px-2 font-medium text-right">Traffic (in / out)</th>
+            <SortableTh sortKey="status"    sort={sort} onToggle={toggle}>Status</SortableTh>
+            <SortableTh sortKey="name"      sort={sort} onToggle={toggle}>Tunnel</SortableTh>
+            <SortableTh sortKey="remoteGw"  sort={sort} onToggle={toggle}>Peer</SortableTh>
+            <SortableTh sortKey="phase1"    sort={sort} onToggle={toggle}>Phase 1 / 2</SortableTh>
+            <SortableTh sortKey="uptimeSec" sort={sort} onToggle={toggle}>Uptime</SortableTh>
+            <SortableTh sortKey="traffic"   sort={sort} onToggle={toggle}>Traffic (in / out)</SortableTh>
           </tr>
         </thead>
         <tbody className="divide-y divide-surface-800">
-          {data.map((t) => (
+          {sorted.map((t) => (
             <tr key={t.id} className="hover:bg-surface-800/50 transition">
               <td className="py-2 px-2">
                 <Chip variant={t.status === 'up' ? 'success' : 'danger'}>{t.status}</Chip>
@@ -70,7 +75,7 @@ function IpsecTab() {
               <td className="py-2 px-2 text-ink-400">
                 {t.status === 'down' ? `down ${relTime(t.downSince)}` : fmtUptime(t.uptimeSec)}
               </td>
-              <td className="py-2 px-2 text-right text-ink-400 tabular-nums">
+              <td className="py-2 px-2 text-ink-400 tabular-nums">
                 <span className="text-sky-400">{fmtBytes(t.bytesIn)}</span> / <span className="text-emerald-400">{fmtBytes(t.bytesOut)}</span>
               </td>
             </tr>
@@ -84,7 +89,6 @@ function IpsecTab() {
 function SslTab() {
   const { data, isLoading } = useSslVpnSessions();
   const [q, setQ] = useState('');
-
   const filtered = useMemo(() => {
     if (!data) return [];
     if (!q) return data.sessions;
@@ -95,6 +99,10 @@ function SslTab() {
       s.sourceIp.includes(l)
     );
   }, [data, q]);
+
+  const { sorted, sort, toggle } = useSortable(filtered, { key: 'user', dir: 'asc' }, {
+    traffic: (r) => r.bytesIn + r.bytesOut,
+  });
 
   if (isLoading) return <div className="text-[12px] text-ink-400 py-6 text-center">Loading sessions...</div>;
 
@@ -114,23 +122,23 @@ function SslTab() {
         <table className="w-full text-left text-[12px]">
           <thead className="text-ink-400 text-[11px] border-b border-surface-600/60">
             <tr>
-              <th className="py-2 px-2 font-medium">User</th>
-              <th className="py-2 px-2 font-medium">Group</th>
-              <th className="py-2 px-2 font-medium">Source IP</th>
-              <th className="py-2 px-2 font-medium">Assigned IP</th>
-              <th className="py-2 px-2 font-medium">Connected</th>
-              <th className="py-2 px-2 font-medium text-right">Traffic</th>
+              <SortableTh sortKey="user"        sort={sort} onToggle={toggle}>User</SortableTh>
+              <SortableTh sortKey="group"       sort={sort} onToggle={toggle}>Group</SortableTh>
+              <SortableTh sortKey="sourceIp"    sort={sort} onToggle={toggle}>Source IP</SortableTh>
+              <SortableTh sortKey="assignedIp"  sort={sort} onToggle={toggle}>Assigned IP</SortableTh>
+              <SortableTh sortKey="connectedAt" sort={sort} onToggle={toggle}>Connected</SortableTh>
+              <SortableTh sortKey="traffic"     sort={sort} onToggle={toggle}>Traffic</SortableTh>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-800">
-            {filtered.map((s) => (
+            {sorted.map((s) => (
               <tr key={s.id} className="hover:bg-surface-800/50 transition">
                 <td className="py-2 px-2 font-medium">{s.user}</td>
                 <td className="py-2 px-2 text-ink-400">{s.group}</td>
                 <td className="py-2 px-2"><span className="code">{s.sourceIp}</span></td>
                 <td className="py-2 px-2"><span className="code">{s.assignedIp}</span></td>
                 <td className="py-2 px-2 text-ink-400">{relTime(s.connectedAt)}</td>
-                <td className="py-2 px-2 text-right text-ink-400 tabular-nums">
+                <td className="py-2 px-2 text-ink-400 tabular-nums">
                   <span className="text-sky-400">{fmtBytes(s.bytesIn)}</span> / <span className="text-emerald-400">{fmtBytes(s.bytesOut)}</span>
                 </td>
               </tr>

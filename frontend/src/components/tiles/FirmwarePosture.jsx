@@ -13,7 +13,7 @@ export function FirmwarePosture({ data }) {
   if (!data) return null;
   const { total, buckets } = data;
   return (
-    <Tile title="Firmware" subtitle={`${total} devices`} icon={Cloud}>
+    <Tile title="Firmware" subtitle={`${total} devices`} icon={Cloud} to="/devices?view=firmware">
       <div className="flex h-2 rounded-full overflow-hidden mb-3">
         {buckets.map((b, i) => (
           <div

@@ -14,7 +14,7 @@ const tone = (status) => {
 
 export function SdwanMatrix({ data = [] }) {
   return (
-    <Tile title="SD-WAN SLA" subtitle={`${data.length} overlays`} icon={Activity}>
+    <Tile title="SD-WAN SLA" subtitle={`${data.length} overlays`} icon={Activity} to="/fabric/sdwan">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
         {data.map((o) => {
           const t = tone(o.status);

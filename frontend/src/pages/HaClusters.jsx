@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { Link } from 'react-router-dom';
 import { ShieldCheck, AlertTriangle, CheckCircle2, ArrowRightLeft } from 'lucide-react';
 import { Tile } from '../components/common/Tile';
 import { KpiCard } from '../components/common/KpiCard';
@@ -29,14 +30,14 @@ function relTime(iso) {
 
 function Node({ name, serial, role }) {
   return (
-    <div className="bg-surface-800 rounded-md px-3 py-2.5">
+    <Link to={`/devices/${encodeURIComponent(name)}`} className="block bg-surface-800 hover:bg-surface-700 rounded-md px-3 py-2.5 transition">
       <div className="flex items-center justify-between mb-1">
         <span className="text-[11px] uppercase tracking-widest text-ink-400">{role}</span>
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
       </div>
-      <div className="text-[13px] font-semibold text-ink-50">{name}</div>
+      <div className="text-[13px] font-semibold text-ink-50 hover:text-sky-300 transition">{name}</div>
       <div className="text-[10.5px] text-ink-400 font-mono mt-1 truncate">{serial}</div>
-    </div>
+    </Link>
   );
 }
 

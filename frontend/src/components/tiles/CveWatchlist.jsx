@@ -18,7 +18,7 @@ const labelFor = (sev) => ({
 
 export function CveWatchlist({ data = [] }) {
   return (
-    <Tile title="CVE watchlist" subtitle="affects installed versions" icon={Lock}>
+    <Tile title="CVE watchlist" subtitle="affects installed versions" icon={Lock} to="/security/cve">
       <ul className="divide-y divide-surface-600/60">
         {data.map((c) => (
           <li key={c.id} className="flex items-center gap-3 py-2 text-[11.5px]">

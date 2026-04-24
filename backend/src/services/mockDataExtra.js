@@ -220,7 +220,316 @@ module.exports = {
   adminAuditLog,
   policyObjects,
   policyProfiles,
+  atRisk,
+  deviceDetail,
+  scriptLibrary,
+  scriptRuns,
+  settings,
 };
+
+// ---------- Scripts -------------------------------------------------------
+
+function scriptLibrary() {
+  return [
+    {
+      id: 'scr-001',
+      name: 'enable-ssh-syslog',
+      type: 'CLI',
+      description: 'Enables central SSH logging to syslog server on all selected devices',
+      body: [
+        'config log syslogd setting',
+        '    set status enable',
+        '    set server "10.0.10.50"',
+        '    set mode reliable',
+        '    set port 514',
+        '    set facility local7',
+        'end',
+      ].join('\n'),
+      lastRun: daysAgo(3),
+      runCount: 47,
+      tags: ['logging','compliance'],
+    },
+    {
+      id: 'scr-002',
+      name: 'disable-admin-telnet',
+      type: 'CLI',
+      description: 'Hardens admin access: disables Telnet and HTTP, enforces HTTPS + SSH only',
+      body: [
+        'config system global',
+        '    set admin-telnet disable',
+        '    set admin-http disable',
+        '    set admintimeout 10',
+        'end',
+        'config system interface',
+        '    edit "mgmt"',
+        '        set allowaccess ping ssh https',
+        '    next',
+        'end',
+      ].join('\n'),
+      lastRun: daysAgo(12),
+      runCount: 82,
+      tags: ['hardening','baseline'],
+    },
+    {
+      id: 'scr-003',
+      name: 'update-dns-servers',
+      type: 'CLI',
+      description: 'Sets primary + secondary DNS to corporate resolvers',
+      body: [
+        'config system dns',
+        '    set primary 10.0.10.53',
+        '    set secondary 10.0.10.54',
+        '    set domain "corp.local"',
+        'end',
+      ].join('\n'),
+      lastRun: daysAgo(45),
+      runCount: 47,
+      tags: ['network'],
+    },
+    {
+      id: 'scr-004',
+      name: 'ot-baseline-hardening',
+      type: 'CLI',
+      description: 'OT-specific baseline: disables FortiCare upload, FortiGuard, and IPsec IKE v1',
+      body: [
+        'config system central-management',
+        '    set include-default-servers disable',
+        'end',
+        'config system global',
+        '    set fortitoken-cloud disable',
+        '    set ike-policy-route disable',
+        'end',
+      ].join('\n'),
+      lastRun: daysAgo(7),
+      runCount: 16,
+      tags: ['ot','hardening','compliance'],
+    },
+    {
+      id: 'scr-005',
+      name: 'diag-tech-support',
+      type: 'TCL',
+      description: 'Gathers diag logs, sessions, routing table, and interface stats into a single archive',
+      body: [
+        '#!/bin/tcl',
+        'puts "=== Gathering diagnostic info ==="',
+        'exec "diagnose sys top 1 1"',
+        'exec "get system performance status"',
+        'exec "diagnose netlink interface list"',
+        'exec "get router info routing-table all"',
+        'exec "diagnose sys session list"',
+        'puts "=== Done - upload archive manually ==="',
+      ].join('\n'),
+      lastRun: hoursAgo(2),
+      runCount: 214,
+      tags: ['diagnostic','support'],
+    },
+    {
+      id: 'scr-006',
+      name: 'block-tor-exit-nodes',
+      type: 'CLI',
+      description: 'Creates address group from FortiGuard Tor feed and applies to outbound deny',
+      body: [
+        'config firewall address',
+        '    edit "Tor-Exits"',
+        '        set type dynamic',
+        '        set sub-type fortiguard',
+        '        set fsso-group "tor-exit-nodes"',
+        '    next',
+        'end',
+      ].join('\n'),
+      lastRun: daysAgo(21),
+      runCount: 47,
+      tags: ['security','threat-blocking'],
+    },
+  ];
+}
+
+function scriptRuns() {
+  return [
+    { id: 'run-901', scriptId: 'scr-005', script: 'diag-tech-support',        device: 'ot-plant-05a', startedAt: hoursAgo(2),  duration: 14, result: 'success' },
+    { id: 'run-900', scriptId: 'scr-001', script: 'enable-ssh-syslog',        device: 'br-sea-01',    startedAt: daysAgo(3),   duration: 4,  result: 'success' },
+    { id: 'run-899', scriptId: 'scr-001', script: 'enable-ssh-syslog',        device: 'br-tac-01',    startedAt: daysAgo(3),   duration: 3,  result: 'success' },
+    { id: 'run-898', scriptId: 'scr-004', script: 'ot-baseline-hardening',    device: 'ot-plant-03a', startedAt: daysAgo(7),   duration: 8,  result: 'success' },
+    { id: 'run-897', scriptId: 'scr-004', script: 'ot-baseline-hardening',    device: 'ot-plant-07a', startedAt: daysAgo(7),   duration: 0,  result: 'fail', error: 'Device offline, no response to connect' },
+    { id: 'run-896', scriptId: 'scr-002', script: 'disable-admin-telnet',     device: 'br-pdx-01',    startedAt: daysAgo(12),  duration: 2,  result: 'success' },
+    { id: 'run-895', scriptId: 'scr-003', script: 'update-dns-servers',       device: 'hq-core-01',   startedAt: daysAgo(45),  duration: 1,  result: 'success' },
+    { id: 'run-894', scriptId: 'scr-006', script: 'block-tor-exit-nodes',     device: 'hq-ext-01',    startedAt: daysAgo(21),  duration: 5,  result: 'success' },
+  ];
+}
+
+// ---------- Settings -------------------------------------------------------
+
+function settings() {
+  return {
+    fmg: {
+      hostname: 'fmg-prod.corp.local',
+      ipAddress: '10.0.10.100',
+      version: '7.6.6-build0458 GA',
+      serial: 'FMG-VMTM24001234',
+      uptime: '47d 12h',
+      mode: 'Standalone',
+      timezone: 'America/Los_Angeles',
+      ntp: ['time.cloudflare.com','pool.ntp.org'],
+    },
+    adoms: [
+      { name: 'root',       devices: 49, pkgs: 8, status: 'active' },
+      { name: 'Fabric',     devices: 47, pkgs: 6, status: 'active' },
+      { name: 'OT-Isolated', devices: 16, pkgs: 3, status: 'active' },
+    ],
+    about: {
+      product: 'FMG Console',
+      version: '0.6.0',
+      channel: 'dev',
+      commit: 'abc1234',
+      apiBase: '/api',
+      docs: 'https://docs.fortinet.com/document/fortimanager/8.0.0/api-best-practices',
+    },
+  };
+}
+
+// ---------- At Risk panel --------------------------------------------------
+
+function atRisk() {
+  return [
+    {
+      id: 'ar-1',
+      severity: 'critical',
+      title: 'CVE-2026-0142 unpatched — SSL-VPN heap overflow',
+      context: 'Affects br-sea-01, br-boi-01, ot-plant-07a · pre-auth RCE · fixed in 7.6.6',
+      action: { label: 'Plan upgrade', to: '/security/cve?id=CVE-2026-0142' },
+      category: 'cve',
+    },
+    {
+      id: 'ar-2',
+      severity: 'high',
+      title: 'ot-plant-07a offline — plant floor controller',
+      context: 'Down 18m · HA failed over to ot-plant-07b · IPsec to DMZ failing IKE negotiation',
+      action: { label: 'Investigate', to: '/devices/ot-plant-07a' },
+      category: 'device',
+    },
+    {
+      id: 'ar-3',
+      severity: 'high',
+      title: 'br-boi-to-hq IPsec tunnel down',
+      context: 'Peer unreachable 2h · br-boi-01 offline · 47 users behind this branch affected',
+      action: { label: 'Diagnose', to: '/fabric/vpn' },
+      category: 'vpn',
+    },
+    {
+      id: 'ar-4',
+      severity: 'medium',
+      title: 'Policy drift on br-sea — 4 rules modified locally',
+      context: 'Rules 12, 18, 24, 47 edited on device, not in FMG · last sync 8h ago',
+      action: { label: 'Review diff', to: '/security/drift' },
+      category: 'drift',
+    },
+    {
+      id: 'ar-5',
+      severity: 'medium',
+      title: 'br-sea HA heartbeat unstable — 3 missed in 5m',
+      context: 'Primary/secondary in-sync but hb link flapping · could trigger unwanted failover',
+      action: { label: 'Check link', to: '/fabric/ha' },
+      category: 'ha',
+    },
+  ];
+}
+
+// ---------- Device detail --------------------------------------------------
+
+function deviceDetail(deviceName) {
+  const fwCveMap = {
+    '7.6.6':        { patched: ['CVE-2026-0142', 'CVE-2026-0098', 'CVE-2025-9821', 'CVE-2025-9704', 'CVE-2025-9512'], open: [] },
+    '7.6.5':        { patched: ['CVE-2025-9821', 'CVE-2025-9704', 'CVE-2025-9512'], open: ['CVE-2026-0142', 'CVE-2026-0098'] },
+    '7.6.4':        { patched: ['CVE-2025-9704', 'CVE-2025-9512'], open: ['CVE-2026-0142', 'CVE-2026-0098', 'CVE-2025-9821'] },
+    '7.4.8':        { patched: [], open: ['CVE-2026-0142', 'CVE-2026-0098', 'CVE-2025-9821', 'CVE-2025-9704', 'CVE-2025-9512'] },
+    '7.2.11':       { patched: [], open: ['CVE-2026-0142', 'CVE-2026-0098', 'CVE-2025-9821', 'CVE-2025-9704', 'CVE-2025-9512'] },
+    '8.0.0-beta2':  { patched: ['CVE-2026-0142', 'CVE-2026-0098', 'CVE-2025-9821', 'CVE-2025-9704', 'CVE-2025-9512'], open: [] },
+  };
+
+  const threatsFor = (host) => {
+    const all = threatEvents();
+    return all.filter((e) => e.destHost === host).slice(0, 8);
+  };
+
+  const installs = [
+    { at: daysAgo(2),  pkg: 'CorporatePolicy', result: 'success', changes: '3 rules' },
+    { at: daysAgo(14), pkg: 'CorporatePolicy', result: 'success', changes: '1 rule' },
+    { at: daysAgo(37), pkg: 'CorporatePolicy', result: 'success', changes: '12 rules · major update' },
+    { at: daysAgo(65), pkg: 'BranchPolicy',    result: 'partial', changes: '8 rules · 1 conflict' },
+  ];
+
+  // Build device detail from fleet data
+  const mock = require('./mockData');
+  const fleet = mock.deviceFleet();
+  const device = fleet.find((d) => d.name === deviceName);
+  if (!device) return null;
+
+  const fwInfo = fwCveMap[device.firmware] || { patched: [], open: [] };
+
+  const interfaces = [
+    { name: 'wan1',     ip: '203.0.113.10/30', state: device.status === 'danger' ? 'down' : 'up', txMbps: 42, rxMbps: 108 },
+    { name: 'wan2',     ip: '198.51.100.10/30', state: 'up', txMbps: 12, rxMbps: 28 },
+    { name: 'internal', ip: '10.0.0.1/24', state: 'up', txMbps: 220, rxMbps: 185 },
+    { name: 'dmz',      ip: '10.100.0.1/24', state: device.site === 'HQ-DMZ' ? 'up' : 'down', txMbps: 18, rxMbps: 42 },
+  ];
+
+  // Cluster info for HA devices
+  let cluster = null;
+  if (device.haMode && device.haMode !== 'single' && device.haMode !== 'standalone') {
+    const clusterName = deviceName.replace(/-\d+[ab]?$/, '').replace(/-\d+$/, '');
+    // Find the partner device
+    const partner = fleet.find((d) =>
+      d.name !== deviceName &&
+      d.site === device.site &&
+      d.platform === device.platform &&
+      d.haMode === device.haMode
+    );
+    cluster = {
+      name: clusterName,
+      mode: device.haMode,
+      role: deviceName.endsWith('01') || deviceName.endsWith('a') ? 'primary' : 'secondary',
+      partner: partner?.name || null,
+      syncState: device.note === 'drift' ? 'in-sync (drift detected)' : 'in-sync',
+      heartbeatMs: device.status === 'warning' ? 4200 : 820,
+    };
+  }
+
+  // Drift info
+  const drift = device.note === 'drift' ? {
+    count: 4,
+    rules: [
+      { id: 12, change: 'modified', desc: 'SSL-VPN portal source addresses' },
+      { id: 18, change: 'modified', desc: 'admin allowlist expanded' },
+      { id: 24, change: 'added',    desc: 'OT-to-corp cross-zone exception' },
+      { id: 47, change: 'disabled', desc: 'guest wifi rate limit' },
+    ],
+    lastSeen: hoursAgo(8),
+  } : null;
+
+  const status = {
+    online:     device.status !== 'danger',
+    lastSyncAt: device.status === 'danger' ? hoursAgo(2) : minsAgo(Math.floor(Math.random() * 4) + 1),
+    uptimeSec:  device.status === 'danger' ? 0 : 4_147_200 + Math.floor(Math.random() * 2_592_000),
+    reason:     device.note || null,
+  };
+
+  return {
+    device,
+    status,
+    cluster,
+    firmware: {
+      current: device.firmware,
+      latest: '7.6.6',
+      patchedCves: fwInfo.patched,
+      openCves:    fwInfo.open,
+      behind:  device.firmware !== '7.6.6' && !device.firmware.includes('beta'),
+    },
+    interfaces,
+    drift,
+    recentThreats: threatsFor(device.name),
+    installs,
+  };
+}
 
 // ---------- Policy objects -------------------------------------------------
 

@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { AlertTriangle, GitCompare, Rocket, RotateCcw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, GitCompare, Rocket, RotateCcw, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { Tile } from '../components/common/Tile';
 import { Chip } from '../components/common/Chip';
 import { Button } from '../components/common/Button';
 import { EmptyState } from '../components/common/EmptyState';
+import { toast } from '../components/common/Toast';
 import { useDriftDetail } from '../hooks/useFmgData';
 
 function useDriftList() {
@@ -85,11 +87,26 @@ export default function Drift() {
         icon={GitCompare}
         action={
           detail && (
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" icon={RotateCcw}>
+            <div className="flex gap-2 items-center">
+              {activeDevice && (
+                <Link
+                  to={`/devices/${encodeURIComponent(activeDevice)}`}
+                  className="inline-flex items-center gap-1 text-[11px] text-ink-400 hover:text-sky-300 transition"
+                >
+                  <ExternalLink className="h-3 w-3" strokeWidth={1.8} />
+                  View device
+                </Link>
+              )}
+              <Button
+                size="sm" variant="ghost" icon={RotateCcw}
+                onClick={() => toast.info('Pull is read-only in demo', { detail: `Would pull live config from ${activeDevice} into package` })}
+              >
                 Pull live into package
               </Button>
-              <Button size="sm" variant="primary" icon={Rocket}>
+              <Button
+                size="sm" variant="primary" icon={Rocket}
+                onClick={() => toast.info('Push is read-only in demo', { detail: `Would push package to ${activeDevice}` })}
+              >
                 Push package to device
               </Button>
             </div>

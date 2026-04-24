@@ -7,7 +7,7 @@ export function ThreatActivity({ data }) {
   const { total24h, points, top } = data;
 
   return (
-    <Tile title="Threat activity" subtitle="last 24h" icon={Activity}>
+    <Tile title="Threat activity" subtitle="last 24h" icon={Activity} to="/security/threats">
       <div className="flex items-baseline justify-between mb-2">
         <div className="text-[22px] font-semibold tabular-nums">{total24h.toLocaleString()}</div>
         <div className="text-[11px] text-ink-400">blocks</div>

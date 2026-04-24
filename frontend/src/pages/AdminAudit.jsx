@@ -4,7 +4,9 @@ import { Tile } from '../components/common/Tile';
 import { KpiCard } from '../components/common/KpiCard';
 import { Chip } from '../components/common/Chip';
 import { Button } from '../components/common/Button';
+import { useSortable, SortableTh } from '../components/common/SortableTable';
 import { useAuditLog } from '../hooks/useFmgData';
+import { toast } from '../components/common/Toast';
 
 function fmtTime(iso) {
   const d = new Date(iso);
@@ -50,6 +52,12 @@ export default function AdminAudit() {
     return true;
   }), [data, q, action, result]);
 
+  const { sorted, sort, toggle } = useSortable(filtered, { key: 'at', dir: 'desc' });
+
+  const handleExport = () => {
+    toast.info('CSV export is read-only in demo', { detail: `${filtered.length} rows would be exported` });
+  };
+
   const success = data.filter((r) => r.result === 'success').length;
   const fail = data.filter((r) => r.result === 'fail').length;
   const admins = new Set(data.map((r) => r.admin)).size;
@@ -69,7 +77,7 @@ export default function AdminAudit() {
         title="Admin audit log"
         subtitle={`${filtered.length} of ${data.length}`}
         icon={ShieldCheck}
-        action={<Button size="sm" variant="ghost" icon={Download}>Export CSV</Button>}
+        action={<Button size="sm" variant="ghost" icon={Download} onClick={handleExport}>Export CSV</Button>}
       >
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <div className="relative flex-1 min-w-[220px]">
@@ -111,17 +119,17 @@ export default function AdminAudit() {
           <table className="w-full text-left text-[11.5px]">
             <thead className="text-ink-400 text-[10.5px] border-b border-surface-600/60">
               <tr>
-                <th className="py-2 px-2 font-medium whitespace-nowrap">Time</th>
-                <th className="py-2 px-2 font-medium">Admin</th>
-                <th className="py-2 px-2 font-medium">IP</th>
-                <th className="py-2 px-2 font-medium">Action</th>
-                <th className="py-2 px-2 font-medium">Target</th>
-                <th className="py-2 px-2 font-medium">Result</th>
+                <SortableTh sortKey="at"     sort={sort} onToggle={toggle}>Time</SortableTh>
+                <SortableTh sortKey="admin"  sort={sort} onToggle={toggle}>Admin</SortableTh>
+                <SortableTh sortKey="ip"     sort={sort} onToggle={toggle}>IP</SortableTh>
+                <SortableTh sortKey="action" sort={sort} onToggle={toggle}>Action</SortableTh>
+                <SortableTh sortKey="target" sort={sort} onToggle={toggle}>Target</SortableTh>
+                <SortableTh sortKey="result" sort={sort} onToggle={toggle}>Result</SortableTh>
                 <th className="py-2 px-2 font-medium">Detail</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-800">
-              {filtered.map((r) => (
+              {sorted.map((r) => (
                 <tr key={r.id} className="hover:bg-surface-800/50 transition">
                   <td className="py-1.5 px-2 text-ink-400 font-mono tabular-nums whitespace-nowrap">{fmtTime(r.at)}</td>
                   <td className="py-1.5 px-2 font-medium">{r.admin}</td>

@@ -21,6 +21,7 @@ export function DriftAlerts({ data = [] }) {
       title="Drift alerts"
       subtitle={`${data.length} device${data.length === 1 ? '' : 's'} diverged`}
       icon={AlertTriangle}
+      to="/security/drift"
     >
       <ul className="space-y-2">
         {data.map((a) => (

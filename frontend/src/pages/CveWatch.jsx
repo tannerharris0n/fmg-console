@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Lock, ExternalLink, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { Tile } from '../components/common/Tile';
 import { Chip } from '../components/common/Chip';
 import { Button } from '../components/common/Button';
 import { Drawer } from '../components/common/Drawer';
 import { EmptyState } from '../components/common/EmptyState';
+import { toast } from '../components/common/Toast';
 import { useCves, useCveDetail } from '../hooks/useFmgData';
 
 const severityFor = (s) => ({
@@ -22,7 +24,10 @@ function CveDetailDrawer({ id, open, onClose }) {
       subtitle={data?.title}
       width="lg"
       footer={
-        <Button variant="primary" icon={ShieldCheck} onClick={onClose}>
+        <Button variant="primary" icon={ShieldCheck} onClick={() => {
+          toast.info('Upgrade scheduling is read-only in demo', { detail: `Would schedule upgrade for ${data?.affectedDevices?.length ?? 0} devices to ${data?.fixedIn}` });
+          onClose();
+        }}>
           Schedule upgrade
         </Button>
       }
@@ -63,8 +68,8 @@ function CveDetailDrawer({ id, open, onClose }) {
             <ul className="bg-surface-800 rounded-md px-3 py-2 space-y-1">
               {data.affectedDevices.map((d) => (
                 <li key={d} className="flex items-center justify-between text-[12px]">
-                  <span className="text-ink-50">{d}</span>
-                  <Button size="sm" variant="ghost">View</Button>
+                  <Link to={`/devices/${encodeURIComponent(d)}`} className="text-ink-50 hover:text-sky-300 transition">{d}</Link>
+                  <Link to={`/devices/${encodeURIComponent(d)}`} className="text-[11px] text-sky-300 hover:text-sky-200 font-medium">View →</Link>
                 </li>
               ))}
             </ul>
@@ -109,6 +114,21 @@ function CveDetailDrawer({ id, open, onClose }) {
 export default function CveWatch() {
   const { data = [], isLoading } = useCves();
   const [selected, setSelected] = useState(null);
+  const [params, setParams] = useSearchParams();
+
+  // Auto-open from deep link (?id=CVE-2026-0142)
+  useEffect(() => {
+    const id = params.get('id');
+    if (id && !selected) setSelected(id);
+  }, [params, selected]);
+
+  const closeAndClear = () => {
+    setSelected(null);
+    if (params.has('id')) {
+      params.delete('id');
+      setParams(params, { replace: true });
+    }
+  };
 
   if (isLoading) return <div className="py-6 text-center text-ink-400 text-sm">Loading advisories...</div>;
 
@@ -159,7 +179,7 @@ export default function CveWatch() {
       <CveDetailDrawer
         id={selected}
         open={Boolean(selected)}
-        onClose={() => setSelected(null)}
+        onClose={closeAndClear}
       />
     </div>
   );

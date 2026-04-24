@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { Server, Search, MapPin, AlertOctagon, Cloud } from 'lucide-react';
 import { Tile } from '../components/common/Tile';
 import { StatusDot } from '../components/common/StatusDot';
 import { Badge } from '../components/common/Badge';
+import { Tooltip } from '../components/common/Tooltip';
 import { EmptyState } from '../components/common/EmptyState';
+import { useSortable, SortableTh } from '../components/common/SortableTable';
 import { useDevices } from '../hooks/useDevices';
+import { toast } from '../components/common/Toast';
 
 const VIEWS = [
   { id: 'all',       label: 'All',         icon: Server },
@@ -25,14 +28,24 @@ const fwTone = (fw) => {
 
 function StatusPill({ device }) {
   if (!device.managed) return <Badge variant="warning">unmanaged</Badge>;
-  if (device.status === 'ok') return <StatusDot status="ok" />;
+  const tipText =
+    device.status === 'ok' ? 'online · up to date' :
+    device.status === 'danger' ? `${device.note || 'offline'} · needs attention` :
+    `${device.note || 'warning'} · review`;
+
   return (
-    <span className="flex items-center gap-1.5">
-      <StatusDot status={device.status} />
-      <span className={clsx('text-[11px]', device.status === 'danger' ? 'text-rose-400' : 'text-amber-400')}>
-        {device.note || device.status}
-      </span>
-    </span>
+    <Tooltip content={tipText}>
+      {device.status === 'ok' ? (
+        <StatusDot status="ok" />
+      ) : (
+        <span className="flex items-center gap-1.5">
+          <StatusDot status={device.status} />
+          <span className={clsx('text-[11px]', device.status === 'danger' ? 'text-rose-400' : 'text-amber-400')}>
+            {device.note || device.status}
+          </span>
+        </span>
+      )}
+    </Tooltip>
   );
 }
 
@@ -40,15 +53,31 @@ function DeviceRow({ device }) {
   return (
     <tr className="hover:bg-surface-800/50 transition">
       <td className="py-2 px-2"><StatusPill device={device} /></td>
-      <td className="py-2 px-2 font-medium">{device.name}</td>
+      <td className="py-2 px-2">
+        <Link to={`/devices/${encodeURIComponent(device.name)}`} className="font-medium hover:text-sky-300 transition">
+          {device.name}
+        </Link>
+      </td>
       <td className="py-2 px-2 text-ink-400">{device.platform}</td>
       <td className="py-2 px-2">
-        <Badge variant={fwTone(device.firmware)}>{device.firmware}</Badge>
+        <Tooltip content={fwTooltip(device.firmware)}>
+          <Badge variant={fwTone(device.firmware)}>{device.firmware}</Badge>
+        </Tooltip>
       </td>
       <td className="py-2 px-2 text-ink-400">{device.site || '—'}</td>
       <td className="py-2 px-2 text-ink-400">{device.haMode || '—'}</td>
     </tr>
   );
+}
+
+function fwTooltip(fw) {
+  if (fw === '7.6.6') return 'Current · no known CVE';
+  if (fw === '7.6.5') return 'One patch behind · CVE-2026-0142 unpatched';
+  if (fw === '7.6.4') return 'Two patches behind · CVE-2026-0142 and 3 others unpatched';
+  if (fw === '7.4.8') return 'Major version behind · all 5 tracked CVEs unpatched';
+  if (fw === '7.2.11') return 'EOL risk · all 5 tracked CVEs unpatched';
+  if (fw.includes('beta')) return 'Pre-release · do not use in production';
+  return fw;
 }
 
 function AllView({ devices, query }) {
@@ -57,24 +86,25 @@ function AllView({ devices, query }) {
     const l = query.toLowerCase();
     return d.name.toLowerCase().includes(l) || (d.site || '').toLowerCase().includes(l) || d.firmware.includes(l);
   });
+  const { sorted, sort, toggle } = useSortable(filtered, { key: 'name', dir: 'asc' });
 
-  if (filtered.length === 0) return <EmptyState title="No devices match" />;
+  if (sorted.length === 0) return <EmptyState title="No devices match" />;
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-[12px]">
         <thead className="text-ink-400 text-[11px] border-b border-surface-600/60">
           <tr>
-            <th className="py-2 px-2 font-medium">Status</th>
-            <th className="py-2 px-2 font-medium">Name</th>
-            <th className="py-2 px-2 font-medium">Platform</th>
-            <th className="py-2 px-2 font-medium">Firmware</th>
-            <th className="py-2 px-2 font-medium">Site</th>
-            <th className="py-2 px-2 font-medium">HA</th>
+            <SortableTh sortKey="status"   sort={sort} onToggle={toggle}>Status</SortableTh>
+            <SortableTh sortKey="name"     sort={sort} onToggle={toggle}>Name</SortableTh>
+            <SortableTh sortKey="platform" sort={sort} onToggle={toggle}>Platform</SortableTh>
+            <SortableTh sortKey="firmware" sort={sort} onToggle={toggle}>Firmware</SortableTh>
+            <SortableTh sortKey="site"     sort={sort} onToggle={toggle}>Site</SortableTh>
+            <SortableTh sortKey="haMode"   sort={sort} onToggle={toggle}>HA</SortableTh>
           </tr>
         </thead>
         <tbody className="divide-y divide-surface-800">
-          {filtered.map((d) => <DeviceRow key={d.name} device={d} />)}
+          {sorted.map((d) => <DeviceRow key={d.name} device={d} />)}
         </tbody>
       </table>
     </div>
@@ -113,7 +143,7 @@ function SiteView({ devices, query }) {
           </div>
           <div className="grid grid-cols-4 gap-2">
             {items.map((d) => (
-              <div key={d.name} className="bg-surface-800 rounded-md px-3 py-2">
+              <Link key={d.name} to={`/devices/${encodeURIComponent(d.name)}`} className="block bg-surface-800 hover:bg-surface-700 rounded-md px-3 py-2 transition">
                 <div className="flex items-center gap-2">
                   <StatusDot status={d.status} />
                   <span className="text-[12px] font-medium truncate">{d.name}</span>
@@ -131,7 +161,7 @@ function SiteView({ devices, query }) {
                     {d.note}
                   </div>
                 )}
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -173,13 +203,20 @@ function UnmanagedView({ devices, query }) {
           <tbody className="divide-y divide-surface-800">
             {items.map((d) => (
               <tr key={d.name} className="hover:bg-surface-800/50">
-                <td className="py-2 px-2 font-medium">{d.name}</td>
+                <td className="py-2 px-2">
+                  <Link to={`/devices/${encodeURIComponent(d.name)}`} className="font-medium hover:text-sky-300 transition">{d.name}</Link>
+                </td>
                 <td className="py-2 px-2 text-ink-400">{d.platform}</td>
-                <td className="py-2 px-2"><Badge variant={fwTone(d.firmware)}>{d.firmware}</Badge></td>
+                <td className="py-2 px-2">
+                  <Tooltip content={fwTooltip(d.firmware)}><Badge variant={fwTone(d.firmware)}>{d.firmware}</Badge></Tooltip>
+                </td>
                 <td className="py-2 px-2 text-ink-400">{d.site}</td>
                 <td className="py-2 px-2 text-amber-300">{d.note}</td>
                 <td className="py-2 px-2 text-right">
-                  <button className="text-[11.5px] text-sky-300 hover:text-sky-200 font-medium">Import ↗</button>
+                  <button
+                    onClick={() => toast.info('Device import is read-only in demo', { detail: `Would add ${d.name} to FMG management` })}
+                    className="text-[11.5px] text-sky-300 hover:text-sky-200 font-medium"
+                  >Import ↗</button>
                 </td>
               </tr>
             ))}
@@ -234,7 +271,7 @@ function FirmwareView({ devices, query }) {
             </div>
             <div className="grid grid-cols-4 gap-2">
               {items.map((d) => (
-                <div key={d.name} className="bg-surface-800 rounded-md px-3 py-2">
+                <Link key={d.name} to={`/devices/${encodeURIComponent(d.name)}`} className="block bg-surface-800 hover:bg-surface-700 rounded-md px-3 py-2 transition">
                   <div className="flex items-center gap-2">
                     <StatusDot status={d.status} />
                     <span className="text-[12px] font-medium truncate">{d.name}</span>
@@ -242,7 +279,7 @@ function FirmwareView({ devices, query }) {
                   <div className="text-[10.5px] text-ink-400 mt-1">
                     {d.platform.replace('FortiGate-', '')} · {d.site}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>

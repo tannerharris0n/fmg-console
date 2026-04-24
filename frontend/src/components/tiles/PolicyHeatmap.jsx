@@ -15,7 +15,7 @@ export function PolicyHeatmap({ data }) {
   const { rules, summary } = data;
 
   return (
-    <Tile title="Policy hit heatmap" subtitle={`${summary.total} rules · 30d`} icon={FileText}>
+    <Tile title="Policy hit heatmap" subtitle={`${summary.total} rules · 30d`} icon={FileText} to="/policy/analyzer">
       <div className="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-[3px] mb-3">
         {rules.map((r) => (
           <div

@@ -6,7 +6,7 @@ export function AdminAudit({ data }) {
   const { successful24h, failed24h, changes24h, byAdmin = [], suspicious = [] } = data;
 
   return (
-    <Tile title="Admin audit" subtitle="last 24h" icon={ShieldCheck}>
+    <Tile title="Admin audit" subtitle="last 24h" icon={ShieldCheck} to="/security/audit">
       <div className="flex gap-5 mb-3">
         <Stat value={successful24h} label="successful" tone="text-emerald-400" />
         <Stat value={failed24h}     label="failed"     tone="text-rose-400" />

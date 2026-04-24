@@ -21,6 +21,7 @@ export function ActivityFeed({ data = [] }) {
   return (
     <Tile
       title="Recent activity"
+      to="/tasks"
       action={
         <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-400 px-2 py-0.5 rounded-full border border-surface-600/60">
           <StatusDot status="ok" pulse />

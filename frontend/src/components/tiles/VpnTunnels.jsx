@@ -8,7 +8,7 @@ export function VpnTunnels({ data }) {
   const upPct = total ? Math.round((up / total) * 100) : 0;
 
   return (
-    <Tile title="VPN tunnels" subtitle="IPsec + SSL" icon={Link2}>
+    <Tile title="VPN tunnels" subtitle="IPsec + SSL" icon={Link2} to="/fabric/vpn">
       <div className="flex items-center gap-3 mb-3">
         <div className="text-[26px] font-semibold leading-none tabular-nums">
           {up}
