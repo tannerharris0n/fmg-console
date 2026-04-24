@@ -39,18 +39,23 @@ function buildFleet() {
     ot.push({ name: `ot-plant-${n}b`, platform: '70F', site: `Plant${i}`, ha: 'A/P' });
   }
   const all = [...hq, ...branches, ...ot];
+
+  // Per-device overrides - status, firmware deviations, beta testing, etc.
   const overrides = {
-    'br-sea-01':    { status: 'warning', note: 'drift',   firmware: '7.4.4' },
-    'br-boi-01':    { status: 'danger',  note: 'offline', firmware: '7.4.2' },
-    'br-tri-02':    { status: 'danger',  note: 'offline', firmware: '7.4.2' },
-    'br-pas-01':    { status: 'warning', note: 'drift',   firmware: '7.4.5' },
-    'br-hlv-02':    { status: 'warning', note: 'reboot',  firmware: '7.4.5' },
-    'ot-plant-02b': { status: 'warning', note: 'pending', firmware: '7.4.4' },
-    'ot-plant-05a': { status: 'warning', note: 'drift',   firmware: '7.2.8' },
-    'ot-plant-07a': { status: 'danger',  note: 'offline', firmware: '7.2.8' },
+    'br-sea-01':    { status: 'warning', note: 'drift',   firmware: '7.6.5' },
+    'br-boi-01':    { status: 'danger',  note: 'offline', firmware: '7.4.8' },
+    'br-tri-02':    { status: 'danger',  note: 'offline', firmware: '7.4.8' },
+    'br-pas-01':    { status: 'warning', note: 'drift',   firmware: '7.6.6' },
+    'br-hlv-02':    { status: 'warning', note: 'reboot',  firmware: '7.6.6' },
+    'ot-plant-02b': { status: 'warning', note: 'pending', firmware: '7.6.5' },
+    'ot-plant-05a': { status: 'warning', note: 'drift',   firmware: '7.2.11' },
+    'ot-plant-07a': { status: 'danger',  note: 'offline', firmware: '7.2.11' },
+    'hq-ext-01':    { firmware: '8.0.0-beta2', note: 'beta lab' },   // testing next-gen
+    'hq-dist-02':   { firmware: '8.0.0-beta2', note: 'beta lab' },
   };
-  const defaultFw = (p) => (p === '70F' ? '7.4.4' : '7.4.5');
-  return all.map((d) => {
+  const defaultFw = (p) => (p === '70F' ? '7.6.5' : '7.6.6');
+
+  const managed = all.map((d) => {
     const o = overrides[d.name] || {};
     return {
       name: d.name,
@@ -60,17 +65,27 @@ function buildFleet() {
       haMode: d.ha,
       status: o.status || 'ok',
       note: o.note || null,
+      managed: true,
     };
   });
+
+  // Discovered but not yet added to FMG management
+  const unmanaged = [
+    { name: 'new-sf-01',    platform: 'FortiGate-60F', firmware: '7.6.4', site: 'SanFrancisco', haMode: 'standalone', status: 'warning', note: 'pending onboard', managed: false },
+    { name: 'acq-portal-01', platform: 'FortiGate-90G', firmware: '7.6.6', site: 'Portland',     haMode: 'standalone', status: 'warning', note: 'new acquisition', managed: false },
+  ];
+
+  return [...managed, ...unmanaged];
 }
 
 const FLEET = buildFleet();
 
 function dashboardSummary() {
-  const online = FLEET.filter((d) => d.status !== 'danger').length;
-  const offline = FLEET.length - online;
+  const managed = FLEET.filter((d) => d.managed !== false);
+  const online = managed.filter((d) => d.status !== 'danger').length;
+  const offline = managed.length - online;
   return {
-    devices: { total: FLEET.length, online, offline },
+    devices: { total: managed.length, online, offline, unmanaged: FLEET.length - managed.length },
     installs: { pending: 3, running: 1, runningPct: 68 },
     drift: { count: 4, severity: 'danger' },
     tasks: { active: 2 },
@@ -118,15 +133,17 @@ function haClusters() {
 }
 
 function firmwarePosture() {
+  const managed = FLEET.filter((d) => d.managed !== false);
   const v = {};
-  FLEET.forEach((d) => { v[d.firmware] = (v[d.firmware] || 0) + 1; });
+  managed.forEach((d) => { v[d.firmware] = (v[d.firmware] || 0) + 1; });
   return {
-    total: FLEET.length,
+    total: managed.length,
     buckets: [
-      { version: '7.4.5', label: 'current',  count: v['7.4.5'] || 0, status: 'ok' },
-      { version: '7.4.4', label: '',         count: v['7.4.4'] || 0, status: 'ok' },
-      { version: '7.4.2', label: 'behind',   count: v['7.4.2'] || 0, status: 'warning' },
-      { version: '7.2.8', label: 'EOL risk', count: v['7.2.8'] || 0, status: 'danger' },
+      { version: '7.6.6',         label: 'current',   count: v['7.6.6'] || 0,         status: 'ok' },
+      { version: '7.6.5',         label: '',          count: v['7.6.5'] || 0,         status: 'ok' },
+      { version: '7.4.8',         label: 'behind',    count: v['7.4.8'] || 0,         status: 'warning' },
+      { version: '7.2.11',        label: 'EOL risk',  count: v['7.2.11'] || 0,        status: 'danger' },
+      { version: '8.0.0-beta2',   label: 'beta lab',  count: v['8.0.0-beta2'] || 0,   status: 'info' },
     ],
   };
 }
@@ -181,11 +198,11 @@ function threatActivity() {
 
 function cveWatchlist() {
   return [
-    { id: 'CVE-2026-0142', severity: 'critical', score: 9.8, title: 'SSL-VPN heap overflow',          detail: 'Pre-auth remote code execution via crafted SSL-VPN request',                 affectedDevices: 3,  fixedIn: '7.4.5' },
-    { id: 'CVE-2026-0098', severity: 'high',     score: 7.5, title: 'Admin auth bypass',              detail: 'Weak session token enables privilege escalation under specific timing',      affectedDevices: 5,  fixedIn: '7.4.5' },
-    { id: 'CVE-2025-9821', severity: 'high',     score: 7.2, title: 'SSH CLI escape',                 detail: 'Privileged-only escape from restricted CLI shell',                           affectedDevices: 10, fixedIn: '7.4.4' },
-    { id: 'CVE-2025-9704', severity: 'medium',   score: 6.1, title: 'CSRF in web UI dashboard',       detail: 'Missing CSRF tokens on specific dashboard endpoints',                        affectedDevices: 14, fixedIn: '7.4.4' },
-    { id: 'CVE-2025-9512', severity: 'medium',   score: 5.4, title: 'Info disclosure via diag debug', detail: 'Diagnostic output exposes configuration snippets to low-priv admins',       affectedDevices: 22, fixedIn: '7.4.3' },
+    { id: 'CVE-2026-0142', severity: 'critical', score: 9.8, title: 'SSL-VPN heap overflow',          detail: 'Pre-auth remote code execution via crafted SSL-VPN request',            affectedDevices: 3,  fixedIn: '7.6.6' },
+    { id: 'CVE-2026-0098', severity: 'high',     score: 7.5, title: 'Admin auth bypass',              detail: 'Weak session token enables privilege escalation under specific timing', affectedDevices: 5,  fixedIn: '7.6.6' },
+    { id: 'CVE-2025-9821', severity: 'high',     score: 7.2, title: 'SSH CLI escape',                 detail: 'Privileged-only escape from restricted CLI shell',                       affectedDevices: 10, fixedIn: '7.6.5' },
+    { id: 'CVE-2025-9704', severity: 'medium',   score: 6.1, title: 'CSRF in web UI dashboard',       detail: 'Missing CSRF tokens on specific dashboard endpoints',                    affectedDevices: 14, fixedIn: '7.6.4' },
+    { id: 'CVE-2025-9512', severity: 'medium',   score: 5.4, title: 'Info disclosure via diag debug', detail: 'Diagnostic output exposes configuration snippets to low-priv admins',   affectedDevices: 22, fixedIn: '7.6.3' },
   ];
 }
 
@@ -324,11 +341,11 @@ function cveDetail(cveId = 'CVE-2026-0142') {
     'CVE-2026-0142': {
       id: 'CVE-2026-0142', severity: 'critical', score: 9.8, title: 'SSL-VPN heap overflow',
       description: 'Pre-authentication remote code execution via crafted SSL-VPN request. Allows unauthenticated attacker to execute arbitrary code as root.',
-      affectedVersions: ['7.2.0 - 7.2.11', '7.4.0 - 7.4.4'],
-      fixedIn: '7.4.5',
+      affectedVersions: ['7.2.0 - 7.2.10', '7.4.0 - 7.4.7', '7.6.0 - 7.6.5'],
+      fixedIn: '7.6.6',
       affectedDevices: ['br-sea-01', 'br-boi-01', 'ot-plant-07a'],
       remediation: [
-        'Upgrade affected devices to 7.4.5 or later',
+        'Upgrade affected devices to 7.6.6 or later',
         'If upgrade is not immediately possible, disable SSL-VPN service',
         'Restrict SSL-VPN portal to trusted source IPs via local-in policy',
       ],
@@ -337,11 +354,11 @@ function cveDetail(cveId = 'CVE-2026-0142') {
     'CVE-2026-0098': {
       id: 'CVE-2026-0098', severity: 'high', score: 7.5, title: 'Admin auth bypass',
       description: 'A race condition in session token validation allows a low-privilege admin to escalate to super_admin under specific timing conditions.',
-      affectedVersions: ['7.4.0 - 7.4.4'],
-      fixedIn: '7.4.5',
+      affectedVersions: ['7.6.0 - 7.6.5'],
+      fixedIn: '7.6.6',
       affectedDevices: ['br-sea-01', 'br-boi-01', 'br-pas-01', 'ot-plant-02b', 'ot-plant-05a'],
       remediation: [
-        'Upgrade to 7.4.5 or later',
+        'Upgrade to 7.6.6 or later',
         'Review admin account privileges and disable unused accounts',
         'Enable MFA for all administrative access',
       ],

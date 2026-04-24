@@ -137,3 +137,19 @@ export function useAuditLog() {
     queryFn: () => api.get('/security/audit/log'),
   });
 }
+
+// ---------- Policy objects & profiles -------------------------------------
+
+export function usePolicyObjects() {
+  return useQuery({
+    queryKey: ['policy', 'objects'],
+    queryFn: () => api.get('/objects'),
+  });
+}
+
+export function usePolicyProfiles() {
+  return useQuery({
+    queryKey: ['policy', 'profiles'],
+    queryFn: () => api.get('/policy/profiles'),
+  });
+}

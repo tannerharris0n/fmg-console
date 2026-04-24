@@ -161,7 +161,7 @@ export function NavTree() {
           <StatusDot status="ok" size="sm" />
           <span className="text-[11px] text-ink-200 truncate">fmg.tanlab.net</span>
         </div>
-        <div className="text-[10.5px] text-ink-400 mt-0.5">ADOM: root · v7.4.5</div>
+        <div className="text-[10.5px] text-ink-400 mt-0.5">ADOM: root · v7.6.6</div>
       </div>
     </aside>
   );

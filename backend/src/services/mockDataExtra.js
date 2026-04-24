@@ -218,4 +218,109 @@ module.exports = {
   threatTopSources,
   threatTopTargets,
   adminAuditLog,
+  policyObjects,
+  policyProfiles,
 };
+
+// ---------- Policy objects -------------------------------------------------
+
+function policyObjects() {
+  const addresses = [
+    { name: 'CORP-VLAN-10-OFFICE',   type: 'ipmask', value: '10.10.0.0/16',     usedBy: 24 },
+    { name: 'CORP-VLAN-20-VOICE',    type: 'ipmask', value: '10.20.0.0/16',     usedBy: 12 },
+    { name: 'CORP-VLAN-30-PRINTERS', type: 'ipmask', value: '10.30.0.0/24',     usedBy: 8  },
+    { name: 'DMZ-WEB-SERVERS',       type: 'ipmask', value: '10.100.1.0/24',    usedBy: 18 },
+    { name: 'DMZ-MAIL',              type: 'ipmask', value: '10.100.2.0/24',    usedBy: 6  },
+    { name: 'OT-PLANT1-SCADA',       type: 'ipmask', value: '10.2.1.0/24',      usedBy: 14 },
+    { name: 'OT-PLANT2-SCADA',       type: 'ipmask', value: '10.2.2.0/24',      usedBy: 14 },
+    { name: 'OT-HISTORIAN',          type: 'ipmask', value: '10.2.100.5/32',    usedBy: 9  },
+    { name: 'GUEST-WIFI',            type: 'ipmask', value: '172.16.0.0/16',    usedBy: 4  },
+    { name: 'MGMT-JUMPHOST',         type: 'ipmask', value: '10.0.99.5/32',     usedBy: 22 },
+    { name: 'PARTNER-ACME',          type: 'ipmask', value: '198.51.100.0/24',  usedBy: 3  },
+    { name: 'EXT-SIEM',              type: 'ipmask', value: '203.0.113.50/32',  usedBy: 47 },
+    { name: 'EXT-MICROSOFT365',      type: 'fqdn',   value: '*.office.com',     usedBy: 38 },
+    { name: 'EXT-GITHUB',            type: 'fqdn',   value: '*.github.com',     usedBy: 12 },
+    { name: 'EXT-ANTHROPIC',         type: 'fqdn',   value: 'api.anthropic.com', usedBy: 5  },
+    { name: 'CORP-VLANS',            type: 'group',  members: ['CORP-VLAN-10-OFFICE','CORP-VLAN-20-VOICE','CORP-VLAN-30-PRINTERS'], usedBy: 31 },
+    { name: 'DMZ-ALL',               type: 'group',  members: ['DMZ-WEB-SERVERS','DMZ-MAIL'], usedBy: 9 },
+    { name: 'OT-SCADA-ALL',          type: 'group',  members: ['OT-PLANT1-SCADA','OT-PLANT2-SCADA'], usedBy: 11 },
+    { name: 'BLACKLIST-TOR',         type: 'geo',    value: 'dynamic · FortiGuard feed', usedBy: 6 },
+  ];
+
+  const services = [
+    { name: 'HTTP',              protocol: 'tcp', ports: '80',            usedBy: 48 },
+    { name: 'HTTPS',             protocol: 'tcp', ports: '443',           usedBy: 92 },
+    { name: 'SSH',               protocol: 'tcp', ports: '22',            usedBy: 21 },
+    { name: 'RDP',               protocol: 'tcp', ports: '3389',          usedBy: 14 },
+    { name: 'DNS',               protocol: 'tcp/udp', ports: '53',        usedBy: 47 },
+    { name: 'SMTP-SUBMISSION',   protocol: 'tcp', ports: '587',           usedBy: 3  },
+    { name: 'MODBUS',            protocol: 'tcp', ports: '502',           usedBy: 16 },
+    { name: 'DNP3',              protocol: 'tcp', ports: '20000',         usedBy: 12 },
+    { name: 'OPC-UA',            protocol: 'tcp', ports: '4840',          usedBy: 10 },
+    { name: 'BACNET',            protocol: 'udp', ports: '47808',         usedBy: 6  },
+    { name: 'SYSLOG',            protocol: 'udp', ports: '514',           usedBy: 47 },
+    { name: 'SNMP',              protocol: 'udp', ports: '161,162',       usedBy: 47 },
+    { name: 'WEB',               protocol: 'group', ports: 'HTTP + HTTPS', members: ['HTTP','HTTPS'], usedBy: 82 },
+    { name: 'OT-PROTOCOLS',      protocol: 'group', ports: '502, 20000, 4840, 47808/udp', members: ['MODBUS','DNP3','OPC-UA','BACNET'], usedBy: 14 },
+  ];
+
+  const schedules = [
+    { name: 'always',             type: 'recurring', spec: '24/7',               usedBy: 98 },
+    { name: 'business-hours',     type: 'recurring', spec: 'Mon-Fri 08:00-18:00', usedBy: 18 },
+    { name: 'after-hours',        type: 'recurring', spec: 'Mon-Fri 18:00-08:00', usedBy: 6  },
+    { name: 'weekends',           type: 'recurring', spec: 'Sat-Sun all day',     usedBy: 3  },
+    { name: 'maintenance-window', type: 'onetime',   spec: 'Sat 02:00-06:00',     usedBy: 2  },
+  ];
+
+  const vips = [
+    { name: 'VIP-WEB',     extIntf: 'wan1', extIp: '203.0.113.10', extPort: '443',           intIp: '10.100.1.10', intPort: '443',   usedBy: 2 },
+    { name: 'VIP-MAIL',    extIntf: 'wan1', extIp: '203.0.113.11', extPort: '25,465,587',    intIp: '10.100.2.10', intPort: 'same',  usedBy: 1 },
+    { name: 'VIP-SSL-VPN', extIntf: 'wan1', extIp: '203.0.113.12', extPort: '443',           intIp: '10.0.0.5',    intPort: '10443', usedBy: 1 },
+  ];
+
+  return {
+    summary: { addresses: addresses.length, services: services.length, schedules: schedules.length, vips: vips.length },
+    addresses,
+    services,
+    schedules,
+    vips,
+  };
+}
+
+// ---------- Security profiles ---------------------------------------------
+
+function policyProfiles() {
+  return {
+    antivirus: [
+      { name: 'default',         engine: 'FortiGuard AV', signatures: '12.0.458', action: 'block', protocols: ['HTTP','SMTP','IMAP','POP3'], usedBy: 4,  note: 'Baseline corporate AV' },
+      { name: 'strict-corp',     engine: 'FortiGuard AV', signatures: '12.0.458', action: 'block', protocols: ['HTTP','HTTPS','SMTP','IMAP','POP3','FTP','CIFS'], usedBy: 8, note: 'HTTPS inspection, quarantine suspicious' },
+      { name: 'ot-permissive',   engine: 'FortiGuard AV', signatures: '12.0.458', action: 'monitor', protocols: ['HTTP','SMTP'], usedBy: 2, note: 'Monitor-only to avoid OT disruption' },
+    ],
+    ips: [
+      { name: 'default-ips',     engine: 'FortiGuard IPS', signatures: '26.0.1412', action: 'block',  scope: 'severity >= high', usedBy: 6,  note: 'Standard protection' },
+      { name: 'corp-ips',        engine: 'FortiGuard IPS', signatures: '26.0.1412', action: 'block',  scope: 'severity >= medium, block scanners', usedBy: 12, note: 'Tighter than default' },
+      { name: 'ot-ips',          engine: 'FortiGuard IPS', signatures: '26.0.1412', action: 'block',  scope: 'OT protocols: Modbus, DNP3, BACnet anomaly', usedBy: 8, note: 'ICS/SCADA-specific' },
+      { name: 'dmz-ips',         engine: 'FortiGuard IPS', signatures: '26.0.1412', action: 'block',  scope: 'public-facing attack signatures', usedBy: 2, note: 'DMZ hardening' },
+    ],
+    webFilter: [
+      { name: 'corp-wf',         engine: 'FortiGuard URL DB', categories: '82', action: 'block', blocked: ['Adult','Malicious','Phishing','Botnet'], usedBy: 6, note: 'Standard corp' },
+      { name: 'strict-wf',       engine: 'FortiGuard URL DB', categories: '82', action: 'block', blocked: ['Adult','Malicious','Phishing','Social','Streaming','Gaming'], usedBy: 4, note: 'Task-focused' },
+      { name: 'guest-wf',        engine: 'FortiGuard URL DB', categories: '82', action: 'block', blocked: ['Adult','Malicious'], usedBy: 1, note: 'Guest WiFi' },
+      { name: 'monitor-only',    engine: 'FortiGuard URL DB', categories: '82', action: 'monitor', blocked: [], usedBy: 2, note: 'Logging without blocking' },
+    ],
+    appControl: [
+      { name: 'corp-apps',       engine: 'FortiGuard AppDB', signatures: '23.0.890', action: 'block', blocked: ['P2P','Games','RemoteAccess'], usedBy: 6, note: 'Corporate acceptable use' },
+      { name: 'ot-apps',         engine: 'FortiGuard AppDB', signatures: '23.0.890', action: 'block', blocked: ['all non-OT'], usedBy: 8,  note: 'Strict OT allowlist' },
+      { name: 'default-apps',    engine: 'FortiGuard AppDB', signatures: '23.0.890', action: 'monitor', blocked: [],        usedBy: 2,  note: 'Visibility only' },
+    ],
+    sslInspect: [
+      { name: 'inspect-all',     mode: 'deep-inspection', cert: 'corp-ca',     exemptions: ['banking','healthcare'], usedBy: 4, note: 'Full TLS inspection' },
+      { name: 'inspect-exempt',  mode: 'deep-inspection', cert: 'corp-ca',     exemptions: ['banking','healthcare','government','privacy-sensitive'], usedBy: 6, note: 'Extended exemptions' },
+      { name: 'certificate-only', mode: 'certificate-inspection', cert: '—',   exemptions: [],  usedBy: 2, note: 'Cert validation only' },
+    ],
+    dlp: [
+      { name: 'pii-detect',      mode: 'block',   patterns: ['SSN','credit-card','passport','drivers-license'], usedBy: 3, note: 'US PII' },
+      { name: 'code-leakage',    mode: 'monitor', patterns: ['private-key','aws-secret','github-token'],        usedBy: 2, note: 'Dev security' },
+    ],
+  };
+}

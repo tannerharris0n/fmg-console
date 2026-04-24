@@ -10,6 +10,8 @@ import Placeholder from './pages/Placeholder';
 import Tasks from './pages/Tasks';
 import PolicyPackages from './pages/PolicyPackages';
 import PolicyAnalyzer from './pages/PolicyAnalyzer';
+import PolicyObjects from './pages/PolicyObjects';
+import PolicyProfiles from './pages/PolicyProfiles';
 import Drift from './pages/Drift';
 import CveWatch from './pages/CveWatch';
 import Sdwan from './pages/Sdwan';
@@ -35,8 +37,8 @@ export default function App() {
 
             <Route path="/policy"          element={<PolicyPackages />} />
             <Route path="/policy/packages" element={<PolicyPackages />} />
-            <Route path="/policy/objects"  element={<Placeholder title="Objects" />} />
-            <Route path="/policy/profiles" element={<Placeholder title="Security profiles" />} />
+            <Route path="/policy/objects"  element={<PolicyObjects />} />
+            <Route path="/policy/profiles" element={<PolicyProfiles />} />
             <Route path="/policy/analyzer" element={<PolicyAnalyzer />} />
 
             <Route path="/security"          element={<Threats />} />

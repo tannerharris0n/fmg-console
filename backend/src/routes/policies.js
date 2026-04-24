@@ -2,6 +2,7 @@
 const express = require('express');
 const config = require('../config');
 const mock = require('../services/mockData');
+const extra = require('../services/mockDataExtra');
 const { getDefaultClient } = require('../services/fmgClient');
 
 const router = express.Router();
@@ -27,6 +28,11 @@ router.get('/heatmap', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+router.get('/profiles', (req, res) => {
+  if (config.useMockData) return res.json(extra.policyProfiles());
+  res.status(501).json({ error: 'Live profiles not wired yet.' });
 });
 
 module.exports = router;

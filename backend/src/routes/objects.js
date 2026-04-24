@@ -1,19 +1,23 @@
 'use strict';
 const express = require('express');
 const config = require('../config');
+const extra = require('../services/mockDataExtra');
 const { getDefaultClient } = require('../services/fmgClient');
 
 const router = express.Router();
 
+router.get('/', async (req, res, next) => {
+  try {
+    if (config.useMockData) return res.json(extra.policyObjects());
+    res.status(501).json({ error: 'Live objects not wired yet.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/addresses', async (req, res, next) => {
   try {
-    if (config.useMockData) {
-      return res.json([
-        { name: 'CORP-VLANS', type: 'group', members: 12 },
-        { name: 'PRINTERS',   type: 'group', members: 8 },
-        { name: 'SERVERS-PROD', type: 'iprange', subnet: '10.10.0.0/16' },
-      ]);
-    }
+    if (config.useMockData) return res.json(extra.policyObjects().addresses);
     const client = getDefaultClient();
     const adom = req.query.adom || config.fmg.defaultAdom;
     const raw = await client.listAddressObjects(adom);
@@ -22,5 +26,9 @@ router.get('/addresses', async (req, res, next) => {
     next(err);
   }
 });
+
+router.get('/services',  (req, res) => res.json(extra.policyObjects().services));
+router.get('/schedules', (req, res) => res.json(extra.policyObjects().schedules));
+router.get('/vips',      (req, res) => res.json(extra.policyObjects().vips));
 
 module.exports = router;
