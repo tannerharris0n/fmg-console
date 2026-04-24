@@ -187,3 +187,29 @@ export function useSettings() {
     queryFn: () => api.get('/settings'),
   });
 }
+
+// ---------- Policy detail hooks --------------------------------------------
+
+export function usePackageDetail(name) {
+  return useQuery({
+    queryKey: ['policy', 'packages', name],
+    queryFn: () => api.get(`/policy/packages/${encodeURIComponent(name)}`),
+    enabled: Boolean(name),
+  });
+}
+
+export function useObjectUsage(name) {
+  return useQuery({
+    queryKey: ['objects', 'usage', name],
+    queryFn: () => api.get(`/objects/${encodeURIComponent(name)}/usage`),
+    enabled: Boolean(name),
+  });
+}
+
+export function useProfileDetail(type, name) {
+  return useQuery({
+    queryKey: ['policy', 'profile', type, name],
+    queryFn: () => api.get(`/policy/profiles/${encodeURIComponent(type)}/${encodeURIComponent(name)}`),
+    enabled: Boolean(type && name),
+  });
+}

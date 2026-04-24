@@ -19,6 +19,15 @@ router.get('/packages', async (req, res, next) => {
   }
 });
 
+router.get('/packages/:name', (req, res) => {
+  if (config.useMockData) {
+    const detail = extra.policyPackageDetail(req.params.name);
+    if (!detail) return res.status(404).json({ error: `Package "${req.params.name}" not found.` });
+    return res.json(detail);
+  }
+  res.status(501).json({ error: 'Live package detail not wired yet.' });
+});
+
 router.get('/heatmap', async (req, res, next) => {
   try {
     // Heatmap data needs hit-count aggregation which FMG doesn't surface
@@ -33,6 +42,11 @@ router.get('/heatmap', async (req, res, next) => {
 router.get('/profiles', (req, res) => {
   if (config.useMockData) return res.json(extra.policyProfiles());
   res.status(501).json({ error: 'Live profiles not wired yet.' });
+});
+
+router.get('/profiles/:type/:name', (req, res) => {
+  if (config.useMockData) return res.json(extra.policyProfileDetail(req.params.type, req.params.name));
+  res.status(501).json({ error: 'Live profile detail not wired yet.' });
 });
 
 module.exports = router;

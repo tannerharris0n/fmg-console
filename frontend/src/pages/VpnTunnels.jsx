@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import clsx from 'clsx';
-import { Link2, Users, Search } from 'lucide-react';
+import { Link2, Users, Search, Network } from 'lucide-react';
 import { Tile } from '../components/common/Tile';
 import { KpiCard } from '../components/common/KpiCard';
 import { Chip } from '../components/common/Chip';
+import { VpnMap } from '../components/visualizations/VpnMap';
 import { useSortable, SortableTh } from '../components/common/SortableTable';
 import { useIpsecTunnels, useSslVpnSessions } from '../hooks/useFmgData';
 
@@ -166,6 +167,10 @@ export default function VpnTunnels() {
         <KpiCard label="SSL-VPN users"  value={ssl?.active ?? 0}   icon={Users} iconTone="info" delta="active now" deltaTone="info" />
         <KpiCard label="Total tunnels"  value={ipsec.length + (ssl?.active ?? 0)} icon={Link2} iconTone="muted" />
       </div>
+
+      <Tile title="Topology" subtitle="IPsec tunnels + SSL-VPN · click endpoints to drill in" icon={Network} padded={false} className="p-2">
+        <VpnMap ipsecTunnels={ipsec} sslSessionCount={ssl?.active ?? 0} />
+      </Tile>
 
       <Tile
         title="VPN"

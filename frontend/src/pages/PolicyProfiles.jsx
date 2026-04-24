@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import clsx from 'clsx';
-import { ShieldCheck, Search, Shield, Bug, Globe, Layers, Lock, FileKey } from 'lucide-react';
+import { ShieldCheck, Search, Shield, Bug, Globe, Layers, Lock, FileKey, ArrowRight } from 'lucide-react';
 import { Tile } from '../components/common/Tile';
 import { KpiCard } from '../components/common/KpiCard';
 import { Badge } from '../components/common/Badge';
 import { EmptyState } from '../components/common/EmptyState';
+import { ProfileDetailDrawer } from '../components/policy/ProfileDetailDrawer';
 import { usePolicyProfiles } from '../hooks/useFmgData';
 
 const TABS = [
@@ -23,56 +24,62 @@ const actionTone = (a) => {
   return 'neutral';
 };
 
-function ProfileList({ items, tab, query }) {
+function ProfileList({ items, tab, query, onSelect }) {
   const f = items.filter((p) => !query || (p.name + ' ' + (p.note || '')).toLowerCase().includes(query.toLowerCase()));
   if (f.length === 0) return <EmptyState title="No profiles match" />;
 
   return (
     <ul className="divide-y divide-surface-600/40">
       {f.map((p) => (
-        <li key={p.name} className="py-3 first:pt-0 last:pb-0">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[13px] font-semibold text-ink-50">{p.name}</span>
-                {p.action && <Badge variant={actionTone(p.action)}>{p.action}</Badge>}
-                {p.mode && <Badge variant="info">{p.mode}</Badge>}
-                <Badge variant="neutral">{p.usedBy} policies</Badge>
-              </div>
-              {p.note && <div className="text-[11.5px] text-ink-400 mt-1">{p.note}</div>}
+        <li key={p.name}>
+          <button
+            onClick={() => onSelect(p)}
+            className="w-full text-left py-3 first:pt-0 last:pb-0 hover:bg-surface-800/40 -mx-2 px-2 rounded-md transition group"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[13px] font-semibold text-ink-50 group-hover:text-sky-300 transition">{p.name}</span>
+                  {p.action && <Badge variant={actionTone(p.action)}>{p.action}</Badge>}
+                  {p.mode && <Badge variant="info">{p.mode}</Badge>}
+                  <Badge variant="neutral">{p.usedBy} policies</Badge>
+                  <ArrowRight className="h-3 w-3 text-ink-400 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition" strokeWidth={2} />
+                </div>
+                {p.note && <div className="text-[11.5px] text-ink-400 mt-1">{p.note}</div>}
 
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
-                {p.engine    && <Field label="Engine"     value={p.engine} />}
-                {p.signatures && <Field label="Sigs"       value={p.signatures} mono />}
-                {p.categories && <Field label="Categories" value={p.categories} mono />}
-                {p.scope     && <Field label="Scope"      value={p.scope} />}
-                {p.cert      && <Field label="Cert"       value={p.cert} mono />}
-              </div>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+                  {p.engine    && <Field label="Engine"     value={p.engine} />}
+                  {p.signatures && <Field label="Sigs"       value={p.signatures} mono />}
+                  {p.categories && <Field label="Categories" value={p.categories} mono />}
+                  {p.scope     && <Field label="Scope"      value={p.scope} />}
+                  {p.cert      && <Field label="Cert"       value={p.cert} mono />}
+                </div>
 
-              {p.protocols && p.protocols.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {p.protocols.map((x) => <span key={x} className="code">{x}</span>)}
-                </div>
-              )}
-              {p.blocked && p.blocked.length > 0 && (
-                <div className="mt-1.5 text-[11px]">
-                  <span className="text-rose-400 font-medium">Blocked:</span>{' '}
-                  <span className="text-ink-200">{p.blocked.join(', ')}</span>
-                </div>
-              )}
-              {p.exemptions && p.exemptions.length > 0 && (
-                <div className="mt-1.5 text-[11px]">
-                  <span className="text-emerald-400 font-medium">Exempt:</span>{' '}
-                  <span className="text-ink-200">{p.exemptions.join(', ')}</span>
-                </div>
-              )}
-              {p.patterns && p.patterns.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {p.patterns.map((x) => <span key={x} className="code">{x}</span>)}
-                </div>
-              )}
+                {p.protocols && p.protocols.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {p.protocols.map((x) => <span key={x} className="code">{x}</span>)}
+                  </div>
+                )}
+                {p.blocked && p.blocked.length > 0 && (
+                  <div className="mt-1.5 text-[11px]">
+                    <span className="text-rose-400 font-medium">Blocked:</span>{' '}
+                    <span className="text-ink-200">{p.blocked.join(', ')}</span>
+                  </div>
+                )}
+                {p.exemptions && p.exemptions.length > 0 && (
+                  <div className="mt-1.5 text-[11px]">
+                    <span className="text-emerald-400 font-medium">Exempt:</span>{' '}
+                    <span className="text-ink-200">{p.exemptions.join(', ')}</span>
+                  </div>
+                )}
+                {p.patterns && p.patterns.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {p.patterns.map((x) => <span key={x} className="code">{x}</span>)}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </button>
         </li>
       ))}
     </ul>
@@ -92,6 +99,7 @@ export default function PolicyProfiles() {
   const { data, isLoading } = usePolicyProfiles();
   const [tab, setTab] = useState('antivirus');
   const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState(null);
 
   if (isLoading) return <div className="py-6 text-center text-ink-400 text-sm">Loading profiles...</div>;
   if (!data) return null;
@@ -150,8 +158,15 @@ export default function PolicyProfiles() {
           </div>
         }
       >
-        <ProfileList items={data[tab]} tab={tab} query={query} />
+        <ProfileList items={data[tab]} tab={tab} query={query} onSelect={setSelected} />
       </Tile>
+
+      <ProfileDetailDrawer
+        profile={selected}
+        type={tab}
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }

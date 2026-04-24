@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import clsx from 'clsx';
-import { Activity, CheckCircle2, XCircle, AlertTriangle, Pause } from 'lucide-react';
+import { Activity, CheckCircle2, XCircle, AlertTriangle, Pause, Network } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { Tile } from '../components/common/Tile';
 import { KpiCard } from '../components/common/KpiCard';
 import { Chip } from '../components/common/Chip';
 import { Badge } from '../components/common/Badge';
 import { Drawer } from '../components/common/Drawer';
+import { SdwanMap } from '../components/visualizations/SdwanMap';
 import { useSdwan, useSdwanOverlay } from '../hooks/useFmgData';
 
 const STATUS_ICON = {
@@ -175,6 +176,10 @@ export default function Sdwan() {
         <KpiCard label="At risk"       value={warn}   icon={AlertTriangle} iconTone="warning" delta="needs review" deltaTone="warning" />
         <KpiCard label="Failing"        value={danger} icon={XCircle}       iconTone="danger"  delta="action required" deltaTone="danger" />
       </div>
+
+      <Tile title="Topology" subtitle="hub-and-spoke · click any site for details" icon={Network} padded={false} className="p-2">
+        <SdwanMap overlays={data.overlays} />
+      </Tile>
 
       <Tile title="Overlays" subtitle={`${data.overlays.length} total`} icon={Activity}>
         {data.overlays.map((o) => (

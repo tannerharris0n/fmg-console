@@ -2,6 +2,7 @@ import { Settings as SettingsIcon, Server, Keyboard, Info, Database, Clock, Exte
 import { Tile } from '../components/common/Tile';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
+import { FmgApiIntegration } from '../components/settings/FmgApiIntegration';
 import { useSettings } from '../hooks/useFmgData';
 import { useKeyboardShortcutsHelp } from '../hooks/useKeyboardShortcuts';
 import { useUiStore } from '../stores/uiStore';
@@ -151,6 +152,8 @@ export default function Settings() {
         <FmgInfoCard fmg={data.fmg} />
         <AdomsCard adoms={data.adoms} />
       </div>
+
+      <FmgApiIntegration />
 
       <div className="grid grid-cols-2 gap-3">
         <AppearanceCard />

@@ -5,6 +5,7 @@ import { Tile } from '../components/common/Tile';
 import { KpiCard } from '../components/common/KpiCard';
 import { Badge } from '../components/common/Badge';
 import { EmptyState } from '../components/common/EmptyState';
+import { ObjectDetailDrawer } from '../components/policy/ObjectDetailDrawer';
 import { usePolicyObjects } from '../hooks/useFmgData';
 
 const TABS = [
@@ -22,7 +23,7 @@ const TYPE_BADGE = {
   iprange:    'info',
 };
 
-function AddressesTab({ items, query }) {
+function AddressesTab({ items, query, onSelect }) {
   const f = items.filter((a) => !query || [a.name, a.type, a.value].join(' ').toLowerCase().includes(query.toLowerCase()));
   if (f.length === 0) return <EmptyState title="No matches" />;
   return (
@@ -37,8 +38,8 @@ function AddressesTab({ items, query }) {
       </thead>
       <tbody className="divide-y divide-surface-800">
         {f.map((a) => (
-          <tr key={a.name} className="hover:bg-surface-800/50">
-            <td className="py-2 px-2 font-medium">{a.name}</td>
+          <tr key={a.name} onClick={() => onSelect({ ...a, type: a.type })} className="hover:bg-surface-800/50 transition cursor-pointer">
+            <td className="py-2 px-2 font-medium text-ink-50 hover:text-sky-300 transition">{a.name}</td>
             <td className="py-2 px-2"><Badge variant={TYPE_BADGE[a.type] || 'neutral'}>{a.type}</Badge></td>
             <td className="py-2 px-2">
               {a.members
@@ -53,7 +54,7 @@ function AddressesTab({ items, query }) {
   );
 }
 
-function ServicesTab({ items, query }) {
+function ServicesTab({ items, query, onSelect }) {
   const f = items.filter((s) => !query || [s.name, s.protocol, s.ports].join(' ').toLowerCase().includes(query.toLowerCase()));
   if (f.length === 0) return <EmptyState title="No matches" />;
   return (
@@ -68,8 +69,8 @@ function ServicesTab({ items, query }) {
       </thead>
       <tbody className="divide-y divide-surface-800">
         {f.map((s) => (
-          <tr key={s.name} className="hover:bg-surface-800/50">
-            <td className="py-2 px-2 font-medium">{s.name}</td>
+          <tr key={s.name} onClick={() => onSelect({ ...s, type: 'service' })} className="hover:bg-surface-800/50 transition cursor-pointer">
+            <td className="py-2 px-2 font-medium text-ink-50 hover:text-sky-300 transition">{s.name}</td>
             <td className="py-2 px-2">
               <Badge variant={s.protocol === 'group' ? 'success' : 'info'}>{s.protocol}</Badge>
             </td>
@@ -82,7 +83,7 @@ function ServicesTab({ items, query }) {
   );
 }
 
-function SchedulesTab({ items, query }) {
+function SchedulesTab({ items, query, onSelect }) {
   const f = items.filter((s) => !query || [s.name, s.type, s.spec].join(' ').toLowerCase().includes(query.toLowerCase()));
   if (f.length === 0) return <EmptyState title="No matches" />;
   return (
@@ -97,8 +98,8 @@ function SchedulesTab({ items, query }) {
       </thead>
       <tbody className="divide-y divide-surface-800">
         {f.map((s) => (
-          <tr key={s.name} className="hover:bg-surface-800/50">
-            <td className="py-2 px-2 font-medium">{s.name}</td>
+          <tr key={s.name} onClick={() => onSelect({ ...s })} className="hover:bg-surface-800/50 transition cursor-pointer">
+            <td className="py-2 px-2 font-medium text-ink-50 hover:text-sky-300 transition">{s.name}</td>
             <td className="py-2 px-2"><Badge variant={s.type === 'onetime' ? 'warning' : 'info'}>{s.type}</Badge></td>
             <td className="py-2 px-2 text-ink-400">{s.spec}</td>
             <td className="py-2 px-2 text-right text-ink-200 tabular-nums">{s.usedBy}</td>
@@ -109,7 +110,7 @@ function SchedulesTab({ items, query }) {
   );
 }
 
-function VipsTab({ items, query }) {
+function VipsTab({ items, query, onSelect }) {
   const f = items.filter((v) => !query || [v.name, v.extIp, v.intIp].join(' ').toLowerCase().includes(query.toLowerCase()));
   if (f.length === 0) return <EmptyState title="No matches" />;
   return (
@@ -124,8 +125,8 @@ function VipsTab({ items, query }) {
       </thead>
       <tbody className="divide-y divide-surface-800">
         {f.map((v) => (
-          <tr key={v.name} className="hover:bg-surface-800/50">
-            <td className="py-2 px-2 font-medium">{v.name}</td>
+          <tr key={v.name} onClick={() => onSelect({ ...v, type: 'vip' })} className="hover:bg-surface-800/50 transition cursor-pointer">
+            <td className="py-2 px-2 font-medium text-ink-50 hover:text-sky-300 transition">{v.name}</td>
             <td className="py-2 px-2">
               <span className="code">{v.extIp}:{v.extPort}</span>
               <span className="text-ink-400 text-[10.5px] ml-1.5">({v.extIntf})</span>
@@ -145,6 +146,7 @@ export default function PolicyObjects() {
   const { data, isLoading } = usePolicyObjects();
   const [tab, setTab] = useState('addresses');
   const [query, setQuery] = useState('');
+  const [selectedObject, setSelectedObject] = useState(null);
 
   const summary = data?.summary;
 
@@ -167,6 +169,7 @@ export default function PolicyObjects() {
 
       <Tile
         title="Objects"
+        subtitle="click any row to see where it's used"
         icon={Package}
         action={
           <div className="flex items-center gap-2">
@@ -205,12 +208,18 @@ export default function PolicyObjects() {
         }
       >
         <div className="overflow-x-auto">
-          {tab === 'addresses' && <AddressesTab items={activeItems} query={query} />}
-          {tab === 'services'  && <ServicesTab  items={activeItems} query={query} />}
-          {tab === 'schedules' && <SchedulesTab items={activeItems} query={query} />}
-          {tab === 'vips'      && <VipsTab      items={activeItems} query={query} />}
+          {tab === 'addresses' && <AddressesTab items={activeItems} query={query} onSelect={setSelectedObject} />}
+          {tab === 'services'  && <ServicesTab  items={activeItems} query={query} onSelect={setSelectedObject} />}
+          {tab === 'schedules' && <SchedulesTab items={activeItems} query={query} onSelect={setSelectedObject} />}
+          {tab === 'vips'      && <VipsTab      items={activeItems} query={query} onSelect={setSelectedObject} />}
         </div>
       </Tile>
+
+      <ObjectDetailDrawer
+        object={selectedObject}
+        open={Boolean(selectedObject)}
+        onClose={() => setSelectedObject(null)}
+      />
     </div>
   );
 }
