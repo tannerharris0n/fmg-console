@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import clsx from 'clsx';
-import { FileText, Server, Clock, CheckCircle2, AlertTriangle, Rocket } from 'lucide-react';
+import { FileText, Server, Clock, CheckCircle2, AlertTriangle, Rocket, GitCompare } from 'lucide-react';
 import { Drawer } from '../common/Drawer';
 import { Chip } from '../common/Chip';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
 import { usePackageDetail } from '../../hooks/useFmgData';
 import { toast } from '../common/Toast';
+import { ConfigDiffDrawer } from './ConfigDiffDrawer';
 
 function relTime(iso) {
   if (!iso) return '—';
@@ -46,6 +48,7 @@ function RuleRow({ rule }) {
 
 export function PackageDetailDrawer({ name, open, onClose }) {
   const { data, isLoading } = usePackageDetail(open ? name : null);
+  const [diffAt, setDiffAt] = useState(null);
 
   const doInstall = () => {
     toast.info('Install is read-only in demo', {
@@ -125,26 +128,40 @@ export function PackageDetailDrawer({ name, open, onClose }) {
             <h3 className="text-[12px] font-semibold mb-2 flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-ink-400" strokeWidth={1.8} />
               Install history
+              <span className="text-[10.5px] text-ink-400 font-normal ml-1">click any row to see what changed</span>
             </h3>
             <ul className="bg-surface-800 rounded-md divide-y divide-surface-600/30">
               {data.installHistory.map((h, i) => (
-                <li key={i} className="flex items-center gap-3 px-3 py-2 text-[11.5px]">
-                  <span className="text-ink-400 tabular-nums w-14 shrink-0">{relTime(h.at)}</span>
-                  <Chip variant={h.result === 'success' ? 'success' : h.result === 'partial' ? 'warning' : 'danger'}>
-                    {h.result}
-                  </Chip>
-                  <span className="text-ink-200">{h.devices} devices</span>
-                  <span className="text-ink-400">·</span>
-                  <span className="text-ink-400">{h.duration}s</span>
-                  <span className="text-ink-400">·</span>
-                  <span className="text-ink-400">by {h.by}</span>
-                  {h.note && <span className="text-amber-300 text-[11px]">{h.note}</span>}
+                <li key={i}>
+                  <button
+                    onClick={() => setDiffAt(h.at)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-[11.5px] hover:bg-surface-700/40 transition text-left group"
+                  >
+                    <span className="text-ink-400 tabular-nums w-14 shrink-0">{relTime(h.at)}</span>
+                    <Chip variant={h.result === 'success' ? 'success' : h.result === 'partial' ? 'warning' : 'danger'}>
+                      {h.result}
+                    </Chip>
+                    <span className="text-ink-200">{h.devices} devices</span>
+                    <span className="text-ink-400">·</span>
+                    <span className="text-ink-400">{h.duration}s</span>
+                    <span className="text-ink-400">·</span>
+                    <span className="text-ink-400">by {h.by}</span>
+                    {h.note && <span className="text-amber-300 text-[11px] truncate">{h.note}</span>}
+                    <GitCompare className="h-3 w-3 text-ink-400 ml-auto opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition shrink-0" strokeWidth={1.8} />
+                  </button>
                 </li>
               ))}
             </ul>
           </section>
         </div>
       )}
+
+      <ConfigDiffDrawer
+        packageName={name}
+        installAt={diffAt}
+        open={Boolean(diffAt)}
+        onClose={() => setDiffAt(null)}
+      />
     </Drawer>
   );
 }

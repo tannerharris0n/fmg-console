@@ -1,6 +1,6 @@
 {
   "name": "fmg-console",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "FMG Console - a friendlier front end for FortiManager",
   "private": true,
   "scripts": {

@@ -27,6 +27,7 @@ const security = require('./routes/security');
 const fabric = require('./routes/fabric');
 const scripts = require('./routes/scripts');
 const settings = require('./routes/settings');
+const v8 = require('./routes/v8');
 
 const app = express();
 
@@ -74,6 +75,7 @@ app.use('/api/security',    requireAuth, security);
 app.use('/api/fabric',      requireAuth, fabric);
 app.use('/api/scripts',     requireAuth, scripts);
 app.use('/api/settings',    requireAuth, settings);
+app.use('/api',             requireAuth, v8);
 
 // ---- Serve the React build in production -------------------------------
 if (config.isProduction) {

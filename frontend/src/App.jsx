@@ -22,6 +22,10 @@ import Threats from './pages/Threats';
 import AdminAudit from './pages/AdminAudit';
 import Scripts from './pages/Scripts';
 import Settings from './pages/Settings';
+import Sase from './pages/Sase';
+import Switches from './pages/Switches';
+import AccessPoints from './pages/AccessPoints';
+import CalendarPage from './pages/CalendarPage';
 
 export default function App() {
   return (
@@ -54,6 +58,10 @@ export default function App() {
 
             <Route path="/tasks"    element={<Tasks />} />
             <Route path="/scripts"  element={<Scripts />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/sase"     element={<Sase />} />
+            <Route path="/switches" element={<Switches />} />
+            <Route path="/aps"      element={<AccessPoints />} />
             <Route path="/settings" element={<Settings />} />
 
             <Route path="*" element={<Placeholder title="Not found" note="That route does not exist." />} />

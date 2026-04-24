@@ -12,6 +12,10 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  Cloud,
+  Network,
+  Wifi,
+  Calendar,
 } from 'lucide-react';
 import { StatusDot } from '../common/StatusDot';
 
@@ -28,13 +32,16 @@ const NAV = [
     ],
   },
   {
-    kind: 'item', to: '/fabric', label: 'Fabric', icon: Share2,
+    kind: 'item', to: '/fabric', label: 'Network', icon: Share2,
     children: [
       { to: '/fabric/sdwan', label: 'SD-WAN' },
-      { to: '/fabric/vpn', label: 'VPN', badge: '34', badgeTone: 'success' },
-      { to: '/fabric/ha', label: 'HA clusters' },
+      { to: '/fabric/vpn',   label: 'VPN', badge: '34', badgeTone: 'success' },
+      { to: '/fabric/ha',    label: 'HA clusters' },
+      { to: '/switches',     label: 'Switches' },
+      { to: '/aps',          label: 'Access points' },
     ],
   },
+  { kind: 'item', to: '/sase', label: 'SASE', icon: Cloud, badge: '342', badgeTone: 'info' },
   { kind: 'group', label: 'Policy' },
   {
     kind: 'item', to: '/policy', label: 'Policy', icon: FileText, badge: '18',
@@ -56,6 +63,7 @@ const NAV = [
     ],
   },
   { kind: 'group', label: 'Ops' },
+  { kind: 'item', to: '/calendar', label: 'Calendar', icon: Calendar, badge: '8', badgeTone: 'info' },
   { kind: 'item', to: '/tasks',    label: 'Tasks',    icon: Zap,       badge: '1', badgeTone: 'info' },
   { kind: 'item', to: '/scripts',  label: 'Scripts',  icon: Code2 },
   { kind: 'item', to: '/settings', label: 'Settings', icon: Settings },

@@ -232,73 +232,81 @@ module.exports = {
 
 // ---------- Policy package detail ------------------------------------------
 
-function policyPackageDetail(packageName) {
-  const PACKAGES = {
-    CorporatePolicy: {
-      name: 'CorporatePolicy',
-      description: 'Baseline firewall policy for HQ + branches · inherits from Global',
-      assignedDevices: ['hq-core-01','hq-core-02','hq-dist-01','hq-dist-02','br-sea-01','br-tac-01','br-spk-01','br-pdx-01','br-med-01','br-eug-01'],
-      lastInstall: hoursAgo(5),
-      ruleCount: 47,
-      rules: [
-        { id: 1,  name: 'Allow-HTTPS-Out',           src: 'CORP-VLANS',         dst: 'all',              service: 'HTTPS',         action: 'accept', hits: 1_240_821, enabled: true,  profiles: ['strict-corp','corp-ips','corp-wf'] },
-        { id: 2,  name: 'Allow-DNS-Out',             src: 'CORP-VLANS',         dst: 'all',              service: 'DNS',           action: 'accept', hits: 890_012,   enabled: true,  profiles: ['default'] },
-        { id: 3,  name: 'Allow-Office365',           src: 'CORP-VLANS',         dst: 'EXT-MICROSOFT365', service: 'HTTPS',         action: 'accept', hits: 2_104_444, enabled: true,  profiles: ['strict-corp','corp-ips'] },
-        { id: 4,  name: 'Block-Tor-Outbound',        src: 'CORP-VLANS',         dst: 'BLACKLIST-TOR',    service: 'all',           action: 'deny',   hits: 482,       enabled: true },
-        { id: 5,  name: 'Allow-Github',              src: 'CORP-VLANS',         dst: 'EXT-GITHUB',       service: 'HTTPS',         action: 'accept', hits: 184_201,   enabled: true,  profiles: ['strict-corp'] },
-        { id: 12, name: 'SSL-VPN-Portal',            src: 'all',                dst: 'VIP-SSL-VPN',      service: 'HTTPS',         action: 'accept', hits: 48_210,    enabled: true,  profiles: ['ssl-vpn-policy'] },
-        { id: 18, name: 'Admin-Management',          src: 'MGMT-JUMPHOST',      dst: 'all',              service: 'SSH',           action: 'accept', hits: 1_202,     enabled: true },
-        { id: 23, name: 'Block-P2P',                 src: 'CORP-VLANS',         dst: 'all',              service: 'all',           action: 'deny',   hits: 88_401,    enabled: true,  profiles: ['corp-apps'] },
-        { id: 24, name: 'OT-Corp-Exception',         src: 'CORP-VLANS',         dst: 'OT-HISTORIAN',     service: 'HTTPS',         action: 'accept', hits: 12_048,    enabled: true },
-        { id: 28, name: 'Partner-Access-ACME',       src: 'PARTNER-ACME',       dst: 'DMZ-WEB-SERVERS',  service: 'HTTPS',         action: 'accept', hits: 4_820,     enabled: true,  profiles: ['dmz-ips'] },
-        { id: 32, name: 'Deny-Legacy-SMB',           src: 'all',                dst: 'all',              service: 'SMB',           action: 'deny',   hits: 2_104,     enabled: true },
-        { id: 45, name: 'Log-Everything-Default',    src: 'all',                dst: 'all',              service: 'all',           action: 'deny',   hits: 18_402,    enabled: true },
-        { id: 47, name: 'Guest-WiFi-Isolation',      src: 'GUEST-WIFI',         dst: 'CORP-VLANS',       service: 'all',           action: 'deny',   hits: 840,       enabled: true },
-      ],
-      installHistory: [
-        { at: hoursAgo(5),  result: 'success', devices: 10, duration: 42,  by: 'tanner' },
-        { at: daysAgo(3),   result: 'success', devices: 10, duration: 38,  by: 'tanner' },
-        { at: daysAgo(12),  result: 'success', devices: 10, duration: 44,  by: 'tiffany' },
-        { at: daysAgo(28),  result: 'partial', devices: 10, duration: 68,  by: 'tanner', note: '1 device skipped: br-boi-01 offline' },
-        { at: daysAgo(52),  result: 'success', devices: 9,  duration: 33,  by: 'tanner' },
-      ],
-    },
-    BranchPolicy: {
-      name: 'BranchPolicy',
-      description: 'Additional branch-specific rules · inherits from CorporatePolicy',
-      assignedDevices: ['br-sea-01','br-tac-01','br-spk-01','br-boi-01','br-pdx-01','br-med-01','br-eug-01','br-bza-01','br-hlv-01','br-pas-01','br-tri-01','br-wsv-01'],
-      lastInstall: daysAgo(2),
-      ruleCount: 18,
-      rules: [
-        { id: 1, name: 'LocalPrintServer',      src: 'CORP-VLAN-30-PRINTERS', dst: 'all',    service: 'all',   action: 'accept', hits: 98_421, enabled: true },
-        { id: 2, name: 'Block-Cross-Branch',    src: 'all',                   dst: 'all',    service: 'all',   action: 'deny',   hits: 4_820,  enabled: true },
-        { id: 8, name: 'Allow-VoIP-Out',        src: 'CORP-VLAN-20-VOICE',    dst: 'all',    service: 'all',   action: 'accept', hits: 48_210, enabled: true, profiles: ['default'] },
-      ],
-      installHistory: [
-        { at: daysAgo(2),   result: 'success', devices: 12, duration: 51,  by: 'tanner' },
-        { at: daysAgo(15),  result: 'success', devices: 12, duration: 47,  by: 'tiffany' },
-      ],
-    },
-    'OT-Baseline': {
-      name: 'OT-Baseline',
-      description: 'Segmented OT policy · Purdue Model enforcement · MODBUS + DNP3 monitoring',
-      assignedDevices: ['ot-plant-01a','ot-plant-01b','ot-plant-02a','ot-plant-02b','ot-plant-03a','ot-plant-03b','ot-plant-04a','ot-plant-04b','ot-plant-05a','ot-plant-05b','ot-plant-06a','ot-plant-06b','ot-plant-07a','ot-plant-07b','ot-plant-08a','ot-plant-08b'],
-      lastInstall: daysAgo(7),
-      ruleCount: 31,
-      rules: [
-        { id: 1, name: 'Corp-to-L3-Historian',      src: 'CORP-VLANS',       dst: 'OT-HISTORIAN',      service: 'HTTPS',         action: 'accept', hits: 12_048, enabled: true, profiles: ['ot-ips'] },
-        { id: 2, name: 'L3-to-L2-Modbus',           src: 'OT-HISTORIAN',     dst: 'OT-SCADA-ALL',      service: 'MODBUS',        action: 'accept', hits: 8_204,  enabled: true, profiles: ['ot-ips'] },
-        { id: 3, name: 'Deny-Corp-to-SCADA',        src: 'CORP-VLANS',       dst: 'OT-SCADA-ALL',      service: 'all',           action: 'deny',   hits: 421,    enabled: true },
-        { id: 8, name: 'Block-Internet-from-OT',    src: 'OT-SCADA-ALL',     dst: 'all',               service: 'all',           action: 'deny',   hits: 12,     enabled: true },
-      ],
-      installHistory: [
-        { at: daysAgo(7),  result: 'partial', devices: 16, duration: 112, by: 'tanner', note: '1 device skipped: ot-plant-07a offline' },
-        { at: daysAgo(21), result: 'success', devices: 16, duration: 95,  by: 'tanner' },
-      ],
-    },
-  };
+const PACKAGE_RULE_LIBRARY = {
+  HQ: [
+    { id: 1,  name: 'Allow-HTTPS-Out',         src: 'CORP-VLANS',     dst: 'all',              service: 'HTTPS',   action: 'accept', hits: 1_240_821, enabled: true,  profiles: ['strict-corp','corp-ips','corp-wf'] },
+    { id: 2,  name: 'Allow-DNS-Out',           src: 'CORP-VLANS',     dst: 'all',              service: 'DNS',     action: 'accept', hits: 890_012,   enabled: true,  profiles: ['default'] },
+    { id: 3,  name: 'Allow-Office365',         src: 'CORP-VLANS',     dst: 'EXT-MICROSOFT365', service: 'HTTPS',   action: 'accept', hits: 2_104_444, enabled: true,  profiles: ['strict-corp','corp-ips'] },
+    { id: 4,  name: 'Block-Tor-Outbound',      src: 'CORP-VLANS',     dst: 'BLACKLIST-TOR',    service: 'all',     action: 'deny',   hits: 482,       enabled: true },
+    { id: 5,  name: 'Allow-Github',            src: 'CORP-VLANS',     dst: 'EXT-GITHUB',       service: 'HTTPS',   action: 'accept', hits: 184_201,   enabled: true,  profiles: ['strict-corp'] },
+    { id: 12, name: 'SSL-VPN-Portal',          src: 'all',            dst: 'VIP-SSL-VPN',      service: 'HTTPS',   action: 'accept', hits: 48_210,    enabled: true,  profiles: ['ssl-vpn-policy'] },
+    { id: 18, name: 'Admin-Management',        src: 'MGMT-JUMPHOST',  dst: 'all',              service: 'SSH',     action: 'accept', hits: 1_202,     enabled: true },
+    { id: 23, name: 'Block-P2P',               src: 'CORP-VLANS',     dst: 'all',              service: 'all',     action: 'deny',   hits: 88_401,    enabled: true,  profiles: ['corp-apps'] },
+    { id: 24, name: 'OT-Corp-Exception',       src: 'CORP-VLANS',     dst: 'OT-HISTORIAN',     service: 'HTTPS',   action: 'accept', hits: 12_048,    enabled: true },
+    { id: 32, name: 'Deny-Legacy-SMB',         src: 'all',            dst: 'all',              service: 'SMB',     action: 'deny',   hits: 2_104,     enabled: true },
+    { id: 45, name: 'Log-Everything-Default',  src: 'all',            dst: 'all',              service: 'all',     action: 'deny',   hits: 18_402,    enabled: true },
+  ],
+  Branch: [
+    { id: 1,  name: 'LocalPrintServer',        src: 'CORP-VLAN-30-PRINTERS', dst: 'all',         service: 'all',   action: 'accept', hits: 98_421,  enabled: true },
+    { id: 2,  name: 'Block-Cross-Branch',      src: 'all',                   dst: 'all',         service: 'all',   action: 'deny',   hits: 4_820,   enabled: true },
+    { id: 3,  name: 'Allow-HTTPS-Out',         src: 'CORP-VLANS',            dst: 'all',         service: 'HTTPS', action: 'accept', hits: 484_210, enabled: true,  profiles: ['corp-wf','corp-ips'] },
+    { id: 4,  name: 'Allow-DNS-Out',           src: 'CORP-VLANS',            dst: 'all',         service: 'DNS',   action: 'accept', hits: 210_040, enabled: true },
+    { id: 8,  name: 'Allow-VoIP-Out',          src: 'CORP-VLAN-20-VOICE',    dst: 'all',         service: 'all',   action: 'accept', hits: 48_210,  enabled: true,  profiles: ['default'] },
+    { id: 12, name: 'Guest-WiFi-Isolation',    src: 'GUEST-WIFI',            dst: 'CORP-VLANS',  service: 'all',   action: 'deny',   hits: 840,     enabled: true },
+    { id: 18, name: 'Block-Tor-Outbound',      src: 'CORP-VLANS',            dst: 'BLACKLIST-TOR', service: 'all', action: 'deny',   hits: 120,     enabled: true },
+  ],
+  OT: [
+    { id: 1,  name: 'Corp-to-L3-Historian',    src: 'CORP-VLANS',   dst: 'OT-HISTORIAN', service: 'HTTPS',  action: 'accept', hits: 12_048,  enabled: true, profiles: ['ot-ips'] },
+    { id: 2,  name: 'L3-to-L2-Modbus',         src: 'OT-HISTORIAN', dst: 'OT-SCADA-ALL', service: 'MODBUS', action: 'accept', hits: 8_204,   enabled: true, profiles: ['ot-ips'] },
+    { id: 3,  name: 'Deny-Corp-to-SCADA',      src: 'CORP-VLANS',   dst: 'OT-SCADA-ALL', service: 'all',    action: 'deny',   hits: 421,     enabled: true },
+    { id: 8,  name: 'Block-Internet-from-OT',  src: 'OT-SCADA-ALL', dst: 'all',          service: 'all',    action: 'deny',   hits: 12,      enabled: true },
+    { id: 12, name: 'Scada-to-PLC',            src: 'OT-SCADA-ALL', dst: 'OT-PLC-ALL',   service: 'MODBUS', action: 'accept', hits: 240_018, enabled: true, profiles: ['ot-ips'] },
+  ],
+  DMZ: [
+    { id: 1, name: 'Inbound-Web',              src: 'all',             dst: 'DMZ-WEB-SERVERS', service: 'HTTPS', action: 'accept', hits: 840_201, enabled: true, profiles: ['dmz-ips','waf'] },
+    { id: 2, name: 'DMZ-to-Corp-DB',           src: 'DMZ-WEB-SERVERS', dst: 'CORP-DB',         service: 'MSSQL', action: 'accept', hits: 120_420, enabled: true, profiles: ['dmz-ips'] },
+    { id: 3, name: 'Block-DMZ-Outbound',       src: 'DMZ-WEB-SERVERS', dst: 'all',             service: 'all',   action: 'deny',   hits: 18_402,  enabled: true },
+  ],
+  Partner: [
+    { id: 1, name: 'Partner-Access-ACME',      src: 'PARTNER-ACME',   dst: 'DMZ-WEB-SERVERS', service: 'HTTPS', action: 'accept', hits: 4_820, enabled: true, profiles: ['dmz-ips'] },
+    { id: 2, name: 'Partner-Access-Globex',    src: 'PARTNER-GLOBEX', dst: 'DMZ-WEB-SERVERS', service: 'HTTPS', action: 'accept', hits: 2_104, enabled: true, profiles: ['dmz-ips'] },
+    { id: 3, name: 'Deny-Partner-Cross-Corp',  src: 'PARTNER-ALL',    dst: 'CORP-VLANS',      service: 'all',   action: 'deny',   hits: 120,   enabled: true },
+  ],
+};
 
-  return PACKAGES[packageName] || null;
+const PACKAGE_DESCRIPTIONS = {
+  'HQ-Core':          { desc: 'Baseline firewall policy for HQ core and distribution',                         bucket: 'HQ' },
+  'BranchPolicy':     { desc: 'Standard branch policy - PNW and Intermountain sites',                          bucket: 'Branch' },
+  'BranchPolicy-Std': { desc: 'Branch policy for smaller sites - lighter ruleset with stricter defaults',      bucket: 'Branch' },
+  'OT-Baseline':      { desc: 'Segmented OT policy - Purdue Model enforcement, MODBUS/DNP3 monitoring',        bucket: 'OT' },
+  'OT-HighRisk':      { desc: 'High-risk OT plants with stricter segmentation - block-all-else baseline',      bucket: 'OT' },
+  'DMZ-Outbound':     { desc: 'DMZ perimeter policy - inbound web + DB egress with WAF profiles attached',     bucket: 'DMZ' },
+  'Partner-Extranet': { desc: 'Partner extranet policy - explicit-only access from partner VLANs',             bucket: 'Partner' },
+};
+
+function policyPackageDetail(packageName) {
+  const list = require('./mockData').policyPackages();
+  const listEntry = list.find((p) => p.name === packageName);
+  if (!listEntry) return null;
+  const meta = PACKAGE_DESCRIPTIONS[packageName] || { desc: `Policy package - ${listEntry.rules} rules`, bucket: 'Branch' };
+  const rules = PACKAGE_RULE_LIBRARY[meta.bucket] || PACKAGE_RULE_LIBRARY.Branch;
+  const nameHash = packageName.length;
+  const installHistory = [
+    { at: listEntry.lastInstalled,           result: 'success', devices: listEntry.devices.length,          duration: 35 + (nameHash % 20), by: listEntry.modifiedBy },
+    { at: daysAgo(3 + (nameHash % 5)),       result: 'success', devices: listEntry.devices.length,          duration: 38 + (nameHash % 12), by: listEntry.modifiedBy },
+    { at: daysAgo(12 + (nameHash % 7)),      result: 'success', devices: listEntry.devices.length,          duration: 44, by: 'tiffany' },
+    { at: daysAgo(28 + (nameHash % 9)),      result: 'partial', devices: listEntry.devices.length,          duration: 68, by: 'tanner', note: '1 device skipped: offline at install time' },
+    { at: daysAgo(52),                       result: 'success', devices: Math.max(1, listEntry.devices.length - 1), duration: 33, by: 'tanner' },
+  ];
+  return {
+    name: listEntry.name,
+    description: meta.desc,
+    assignedDevices: listEntry.devices,
+    lastInstall: listEntry.lastInstalled,
+    ruleCount: listEntry.rules,
+    rules,
+    installHistory,
+  };
 }
 
 // ---------- Policy object detail (usedBy) ---------------------------------
@@ -307,18 +315,18 @@ function policyObjectDetail(objectName) {
   // Return a usedBy list showing which policies/rules reference this object
   const USED_BY = {
     'CORP-VLANS': [
-      { pkg: 'CorporatePolicy', ruleId: 1,  ruleName: 'Allow-HTTPS-Out',           role: 'src' },
-      { pkg: 'CorporatePolicy', ruleId: 2,  ruleName: 'Allow-DNS-Out',             role: 'src' },
-      { pkg: 'CorporatePolicy', ruleId: 3,  ruleName: 'Allow-Office365',           role: 'src' },
-      { pkg: 'CorporatePolicy', ruleId: 4,  ruleName: 'Block-Tor-Outbound',        role: 'src' },
-      { pkg: 'CorporatePolicy', ruleId: 5,  ruleName: 'Allow-Github',              role: 'src' },
-      { pkg: 'CorporatePolicy', ruleId: 23, ruleName: 'Block-P2P',                 role: 'src' },
-      { pkg: 'CorporatePolicy', ruleId: 24, ruleName: 'OT-Corp-Exception',         role: 'src' },
+      { pkg: 'HQ-Core', ruleId: 1,  ruleName: 'Allow-HTTPS-Out',           role: 'src' },
+      { pkg: 'HQ-Core', ruleId: 2,  ruleName: 'Allow-DNS-Out',             role: 'src' },
+      { pkg: 'HQ-Core', ruleId: 3,  ruleName: 'Allow-Office365',           role: 'src' },
+      { pkg: 'HQ-Core', ruleId: 4,  ruleName: 'Block-Tor-Outbound',        role: 'src' },
+      { pkg: 'HQ-Core', ruleId: 5,  ruleName: 'Allow-Github',              role: 'src' },
+      { pkg: 'HQ-Core', ruleId: 23, ruleName: 'Block-P2P',                 role: 'src' },
+      { pkg: 'HQ-Core', ruleId: 24, ruleName: 'OT-Corp-Exception',         role: 'src' },
       { pkg: 'OT-Baseline',     ruleId: 1,  ruleName: 'Corp-to-L3-Historian',      role: 'src' },
       { pkg: 'OT-Baseline',     ruleId: 3,  ruleName: 'Deny-Corp-to-SCADA',        role: 'src' },
     ],
     'OT-HISTORIAN': [
-      { pkg: 'CorporatePolicy', ruleId: 24, ruleName: 'OT-Corp-Exception',    role: 'dst' },
+      { pkg: 'HQ-Core', ruleId: 24, ruleName: 'OT-Corp-Exception',    role: 'dst' },
       { pkg: 'OT-Baseline',     ruleId: 1,  ruleName: 'Corp-to-L3-Historian', role: 'dst' },
       { pkg: 'OT-Baseline',     ruleId: 2,  ruleName: 'L3-to-L2-Modbus',      role: 'src' },
     ],
@@ -327,18 +335,18 @@ function policyObjectDetail(objectName) {
       { pkg: 'OT-Baseline', ruleId: 12, ruleName: 'Scada-to-PLC',       role: 'service' },
     ],
     'HTTPS': [
-      { pkg: 'CorporatePolicy', ruleId: 1,  ruleName: 'Allow-HTTPS-Out',    role: 'service' },
-      { pkg: 'CorporatePolicy', ruleId: 3,  ruleName: 'Allow-Office365',    role: 'service' },
-      { pkg: 'CorporatePolicy', ruleId: 5,  ruleName: 'Allow-Github',       role: 'service' },
-      { pkg: 'CorporatePolicy', ruleId: 12, ruleName: 'SSL-VPN-Portal',     role: 'service' },
-      { pkg: 'CorporatePolicy', ruleId: 28, ruleName: 'Partner-Access-ACME', role: 'service' },
+      { pkg: 'HQ-Core', ruleId: 1,  ruleName: 'Allow-HTTPS-Out',    role: 'service' },
+      { pkg: 'HQ-Core', ruleId: 3,  ruleName: 'Allow-Office365',    role: 'service' },
+      { pkg: 'HQ-Core', ruleId: 5,  ruleName: 'Allow-Github',       role: 'service' },
+      { pkg: 'HQ-Core', ruleId: 12, ruleName: 'SSL-VPN-Portal',     role: 'service' },
+      { pkg: 'HQ-Core', ruleId: 28, ruleName: 'Partner-Access-ACME', role: 'service' },
     ],
     'VIP-WEB': [
-      { pkg: 'CorporatePolicy', ruleId: 28, ruleName: 'Partner-Access-ACME', role: 'dst' },
-      { pkg: 'DmzPolicy',       ruleId: 2,  ruleName: 'Web-Inbound',         role: 'dst' },
+      { pkg: 'HQ-Core', ruleId: 28, ruleName: 'Partner-Access-ACME', role: 'dst' },
+      { pkg: 'DMZ-Outbound',       ruleId: 2,  ruleName: 'Web-Inbound',         role: 'dst' },
     ],
     'EXT-MICROSOFT365': [
-      { pkg: 'CorporatePolicy', ruleId: 3, ruleName: 'Allow-Office365', role: 'dst' },
+      { pkg: 'HQ-Core', ruleId: 3, ruleName: 'Allow-Office365', role: 'dst' },
     ],
   };
 
@@ -686,9 +694,9 @@ function deviceDetail(deviceName) {
   };
 
   const installs = [
-    { at: daysAgo(2),  pkg: 'CorporatePolicy', result: 'success', changes: '3 rules' },
-    { at: daysAgo(14), pkg: 'CorporatePolicy', result: 'success', changes: '1 rule' },
-    { at: daysAgo(37), pkg: 'CorporatePolicy', result: 'success', changes: '12 rules · major update' },
+    { at: daysAgo(2),  pkg: 'HQ-Core', result: 'success', changes: '3 rules' },
+    { at: daysAgo(14), pkg: 'HQ-Core', result: 'success', changes: '1 rule' },
+    { at: daysAgo(37), pkg: 'HQ-Core', result: 'success', changes: '12 rules · major update' },
     { at: daysAgo(65), pkg: 'BranchPolicy',    result: 'partial', changes: '8 rules · 1 conflict' },
   ];
 

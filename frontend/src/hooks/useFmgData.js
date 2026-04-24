@@ -213,3 +213,45 @@ export function useProfileDetail(type, name) {
     enabled: Boolean(type && name),
   });
 }
+
+// ---------- v0.8 hooks -----------------------------------------------------
+
+export function useSaseOverview() {
+  return useQuery({ queryKey: ['sase', 'overview'], queryFn: () => api.get('/sase/overview') });
+}
+
+export function useSaseZtnaApps() {
+  return useQuery({ queryKey: ['sase', 'ztna'], queryFn: () => api.get('/sase/ztna-apps') });
+}
+
+export function useSwitches() {
+  return useQuery({ queryKey: ['switches'], queryFn: () => api.get('/switches') });
+}
+
+export function useSwitchDetail(name) {
+  return useQuery({
+    queryKey: ['switches', name],
+    queryFn: () => api.get(`/switches/${encodeURIComponent(name)}`),
+    enabled: Boolean(name),
+  });
+}
+
+export function useAps() {
+  return useQuery({ queryKey: ['aps'], queryFn: () => api.get('/aps') });
+}
+
+export function useApSsidConfig() {
+  return useQuery({ queryKey: ['aps', 'ssid'], queryFn: () => api.get('/aps/ssid-config') });
+}
+
+export function useChangeCalendar() {
+  return useQuery({ queryKey: ['calendar'], queryFn: () => api.get('/calendar') });
+}
+
+export function useConfigDiff(packageName, at) {
+  return useQuery({
+    queryKey: ['diff', packageName, at],
+    queryFn: () => api.get(`/policy/packages/${encodeURIComponent(packageName)}/diff${at ? '?at=' + encodeURIComponent(at) : ''}`),
+    enabled: Boolean(packageName),
+  });
+}
