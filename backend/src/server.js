@@ -10,6 +10,7 @@ const rateLimit = require('express-rate-limit');
 const config = require('./config');
 const logger = require('./logger');
 const { requireAuth } = require('./middleware/auth');
+const { readOnly } = require('./middleware/readOnly');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const health = require('./routes/health');
@@ -23,8 +24,13 @@ const preferences = require('./routes/preferences');
 const install = require('./routes/install');
 const analyzer = require('./routes/analyzer');
 const security = require('./routes/security');
+const fabric = require('./routes/fabric');
 
 const app = express();
+
+// Railway / Cloudflare sit in front of the app. Trust one proxy hop so
+// rate limiting and req.ip reflect the real client, not the proxy.
+app.set('trust proxy', 1);
 
 // ---- Global middleware --------------------------------------------------
 app.use(helmet({
@@ -37,6 +43,9 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '2mb' }));
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
+
+// Demo deployments block all non-idempotent verbs before routes see them.
+app.use('/api', readOnly);
 
 const limiter = rateLimit({
   windowMs: 60_000,
@@ -60,6 +69,7 @@ app.use('/api/preferences', requireAuth, preferences);
 app.use('/api/install',     requireAuth, install);
 app.use('/api/analyzer',    requireAuth, analyzer);
 app.use('/api/security',    requireAuth, security);
+app.use('/api/fabric',      requireAuth, fabric);
 
 // ---- Serve the React build in production -------------------------------
 if (config.isProduction) {

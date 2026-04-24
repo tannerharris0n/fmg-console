@@ -12,6 +12,11 @@ import PolicyPackages from './pages/PolicyPackages';
 import PolicyAnalyzer from './pages/PolicyAnalyzer';
 import Drift from './pages/Drift';
 import CveWatch from './pages/CveWatch';
+import Sdwan from './pages/Sdwan';
+import VpnTunnels from './pages/VpnTunnels';
+import HaClusters from './pages/HaClusters';
+import Threats from './pages/Threats';
+import AdminAudit from './pages/AdminAudit';
 
 export default function App() {
   return (
@@ -23,10 +28,10 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="/devices" element={<Devices />} />
 
-            <Route path="/fabric/sdwan" element={<Placeholder title="SD-WAN" />} />
-            <Route path="/fabric/vpn"   element={<Placeholder title="VPN tunnels" />} />
-            <Route path="/fabric/ha"    element={<Placeholder title="HA clusters" />} />
-            <Route path="/fabric"       element={<Placeholder title="Fabric" />} />
+            <Route path="/fabric"        element={<Sdwan />} />
+            <Route path="/fabric/sdwan"  element={<Sdwan />} />
+            <Route path="/fabric/vpn"    element={<VpnTunnels />} />
+            <Route path="/fabric/ha"     element={<HaClusters />} />
 
             <Route path="/policy"          element={<PolicyPackages />} />
             <Route path="/policy/packages" element={<PolicyPackages />} />
@@ -34,10 +39,10 @@ export default function App() {
             <Route path="/policy/profiles" element={<Placeholder title="Security profiles" />} />
             <Route path="/policy/analyzer" element={<PolicyAnalyzer />} />
 
-            <Route path="/security"          element={<Placeholder title="Security" />} />
-            <Route path="/security/threats"  element={<Placeholder title="Threats" />} />
+            <Route path="/security"          element={<Threats />} />
+            <Route path="/security/threats"  element={<Threats />} />
             <Route path="/security/drift"    element={<Drift />} />
-            <Route path="/security/audit"    element={<Placeholder title="Admin audit" />} />
+            <Route path="/security/audit"    element={<AdminAudit />} />
             <Route path="/security/cve"      element={<CveWatch />} />
 
             <Route path="/tasks"    element={<Tasks />} />

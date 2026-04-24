@@ -28,9 +28,18 @@ const config = {
 
   useMockData: parseBool(process.env.USE_MOCK_DATA, true),
   devSkipAuth: parseBool(process.env.DEV_SKIP_AUTH, false),
+  demoMode: parseBool(process.env.DEMO_MODE, false),
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
 };
 
 config.isProduction = config.env === 'production';
+
+// Demo mode is a superset: force mock data and bypass auth so the public
+// demo deployment renders without requiring a real FMG or a Supabase project.
+// All mutating HTTP verbs are rejected by the readOnly middleware.
+if (config.demoMode) {
+  config.useMockData = true;
+  config.devSkipAuth = true;
+}
 
 module.exports = config;

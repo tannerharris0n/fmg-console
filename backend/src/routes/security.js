@@ -2,6 +2,7 @@
 const express = require('express');
 const config = require('../config');
 const mock = require('../services/mockData');
+const extra = require('../services/mockDataExtra');
 
 const router = express.Router();
 
@@ -30,9 +31,29 @@ router.get('/audit', (req, res) => {
   res.status(501).json({ error: 'Live audit not wired yet.' });
 });
 
+router.get('/audit/log', (req, res) => {
+  if (config.useMockData) return res.json(extra.adminAuditLog());
+  res.status(501).json({ error: 'Live audit log not wired yet.' });
+});
+
 router.get('/threats', (req, res) => {
   if (config.useMockData) return res.json(mock.threatActivity());
   res.status(501).json({ error: 'Live threat data not wired yet.' });
+});
+
+router.get('/threats/events', (req, res) => {
+  if (config.useMockData) return res.json(extra.threatEvents());
+  res.status(501).json({ error: 'Live threat events not wired yet.' });
+});
+
+router.get('/threats/top-sources', (req, res) => {
+  if (config.useMockData) return res.json(extra.threatTopSources());
+  res.status(501).json({ error: 'Live threat sources not wired yet.' });
+});
+
+router.get('/threats/top-targets', (req, res) => {
+  if (config.useMockData) return res.json(extra.threatTopTargets());
+  res.status(501).json({ error: 'Live threat targets not wired yet.' });
 });
 
 module.exports = router;

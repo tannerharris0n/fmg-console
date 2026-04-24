@@ -9,6 +9,7 @@ router.get('/', (req, res) => {
     ok: true,
     env: config.env,
     mock: config.useMockData,
+    demo: config.demoMode,
     time: new Date().toISOString(),
   });
 });

@@ -2,6 +2,7 @@ import { Share2, ShieldCheck, Search, Clock } from 'lucide-react';
 import { Segmented } from '../common/Segmented';
 import { useUiStore } from '../../stores/uiStore';
 import { useAuth } from '../../hooks/useAuth';
+import { useAppStatus } from '../../hooks/useAppStatus';
 
 function Avatar({ user }) {
   const initials = (user?.email || 'U')
@@ -15,24 +16,41 @@ function Avatar({ user }) {
   );
 }
 
+function DemoBadge() {
+  return (
+    <span
+      title="Read-only demo environment. All data is fictional."
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-widest bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30"
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+      Demo
+    </span>
+  );
+}
+
 export function TopBar({ title = 'Dashboard', subtitle, showPreset = true }) {
   const preset = useUiStore((s) => s.preset);
   const setPreset = useUiStore((s) => s.setPreset);
   const toggleCmdk = useUiStore((s) => s.toggleCmdk);
   const { user } = useAuth();
+  const { data: status } = useAppStatus();
+  const isDemo = status?.demo === true;
 
   return (
     <header className="flex items-center justify-between px-5 py-3 border-b border-surface-600/60 bg-surface-950/60 backdrop-blur">
-      <div className="min-w-0">
-        <h1 className="text-[16px] font-semibold tracking-tight leading-none">{title}</h1>
-        {subtitle !== undefined ? (
-          <div className="text-[11px] text-ink-400 mt-1">{subtitle}</div>
-        ) : (
-          <div className="flex items-center gap-1.5 text-[11px] text-ink-400 mt-1">
-            <Clock className="h-3 w-3" strokeWidth={1.7} />
-            <span>auto refresh · every 30s</span>
-          </div>
-        )}
+      <div className="min-w-0 flex items-center gap-3">
+        <div>
+          <h1 className="text-[16px] font-semibold tracking-tight leading-none">{title}</h1>
+          {subtitle !== undefined ? (
+            <div className="text-[11px] text-ink-400 mt-1">{subtitle}</div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[11px] text-ink-400 mt-1">
+              <Clock className="h-3 w-3" strokeWidth={1.7} />
+              <span>auto refresh · every 30s</span>
+            </div>
+          )}
+        </div>
+        {isDemo && <DemoBadge />}
       </div>
 
       <div className="flex items-center gap-3">
