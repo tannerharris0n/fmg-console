@@ -20,6 +20,9 @@ const objects = require('./routes/objects');
 const tasks = require('./routes/tasks');
 const adoms = require('./routes/adoms');
 const preferences = require('./routes/preferences');
+const install = require('./routes/install');
+const analyzer = require('./routes/analyzer');
+const security = require('./routes/security');
 
 const app = express();
 
@@ -54,6 +57,9 @@ app.use('/api/objects',     requireAuth, objects);
 app.use('/api/tasks',       requireAuth, tasks);
 app.use('/api/adoms',       requireAuth, adoms);
 app.use('/api/preferences', requireAuth, preferences);
+app.use('/api/install',     requireAuth, install);
+app.use('/api/analyzer',    requireAuth, analyzer);
+app.use('/api/security',    requireAuth, security);
 
 // ---- Serve the React build in production -------------------------------
 if (config.isProduction) {

@@ -1,6 +1,6 @@
 {
   "name": "fmg-console-backend",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "FMG Console backend - Express proxy to the FortiManager JSON-RPC API",
   "main": "src/server.js",
   "scripts": {

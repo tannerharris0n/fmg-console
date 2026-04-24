@@ -226,19 +226,111 @@ function activityFeed() {
 
 function policyPackages() {
   return [
-    { name: 'HQ-Core',        devices: 2, lastModified: minsAgo(30),   rules: 84 },
-    { name: 'BranchPolicy',   devices: 4, lastModified: minsAgo(120),  rules: 52 },
-    { name: 'OT-Baseline',    devices: 2, lastModified: minsAgo(1440), rules: 38 },
-    { name: 'DMZ-Outbound',   devices: 1, lastModified: minsAgo(720),  rules: 21 },
+    { id: 'HQ-Core',      name: 'HQ-Core',       devices: ['hq-core-01', 'hq-dist-02'],        rules: 84, lastModified: minsAgo(30),   lastInstalled: minsAgo(45),   modifiedBy: 'tanner' },
+    { id: 'BranchPolicy', name: 'BranchPolicy',  devices: ['br-sea-01', 'br-tac-01', 'br-spk-01', 'br-boi-01'], rules: 52, lastModified: minsAgo(120),  lastInstalled: minsAgo(720),  modifiedBy: 'tanner' },
+    { id: 'OT-Baseline',  name: 'OT-Baseline',   devices: ['ot-plant-01', 'ot-plant-02'],      rules: 38, lastModified: minsAgo(1440), lastInstalled: minsAgo(2880), modifiedBy: 'tiffany' },
+    { id: 'DMZ-Outbound', name: 'DMZ-Outbound',  devices: ['hq-dmz-01'],                        rules: 21, lastModified: minsAgo(720),  lastInstalled: minsAgo(720),  modifiedBy: 'tanner' },
   ];
 }
 
 function tasks() {
   return [
-    { id: 1024, name: 'Install BranchPolicy v14', state: 'running', percent: 68, startedAt: minsAgo(5) },
-    { id: 1023, name: 'Install HQ-Core v32',      state: 'done',    percent: 100, startedAt: minsAgo(45), endedAt: minsAgo(38) },
-    { id: 1022, name: 'Script: hardening-v2',     state: 'done',    percent: 100, startedAt: minsAgo(245), endedAt: minsAgo(240) },
+    { id: 1024, name: 'Install BranchPolicy v14', type: 'install', state: 'running', percent: 68, startedAt: minsAgo(5),  targets: 6,  user: 'tanner' },
+    { id: 1023, name: 'Install HQ-Core v32',      type: 'install', state: 'done',    percent: 100, startedAt: minsAgo(45), endedAt: minsAgo(38), targets: 2, user: 'tanner' },
+    { id: 1022, name: 'Script: hardening-v2',     type: 'script',  state: 'done',    percent: 100, startedAt: minsAgo(245), endedAt: minsAgo(240), targets: 12, user: 'tanner' },
+    { id: 1021, name: 'Firmware: 7.4.5 upgrade',  type: 'firmware',state: 'queued',  percent: 0,  startedAt: null, targets: 5, user: 'tanner' },
+    { id: 1020, name: 'Install OT-Baseline v8',   type: 'install', state: 'failed',  percent: 42, startedAt: minsAgo(360), endedAt: minsAgo(355), targets: 2, user: 'tiffany', error: 'Device ot-plant-02 refused connection' },
   ];
+}
+
+function analyzerFindings() {
+  return {
+    summary: { dead: 18, shadow: 7, redundant: 4, overlyPermissive: 3, overrides: 2 },
+    findings: [
+      { id: 'f-001', severity: 'danger',  type: 'dead',      rule: 'allow-legacy-printer-port-9100', package: 'BranchPolicy', note: 'No hits in 30 days. Safe to remove.', suggestion: 'disable' },
+      { id: 'f-002', severity: 'danger',  type: 'dead',      rule: 'allow-deprecated-smb-v1',        package: 'HQ-Core',      note: 'No hits in 30 days. Known security risk.', suggestion: 'delete' },
+      { id: 'f-003', severity: 'warning', type: 'shadow',    rule: 'allow-web-servers-80',            package: 'DMZ-Outbound', note: 'Shadowed by broader rule 4 (any/any/any-web).', suggestion: 'move above rule 4 or delete' },
+      { id: 'f-004', severity: 'warning', type: 'overly-permissive', rule: 'admin-to-everywhere',    package: 'HQ-Core',      note: 'Source any, destination any, service any.', suggestion: 'narrow to management subnet + SSH/HTTPS only' },
+      { id: 'f-005', severity: 'warning', type: 'redundant', rule: 'block-tor-exits-dup',             package: 'BranchPolicy', note: 'Identical action to rule 12. Merge recommended.', suggestion: 'merge with rule 12' },
+      { id: 'f-006', severity: 'info',    type: 'override',  rule: 'local-exception-br-boi',           package: 'BranchPolicy', note: 'Device-level override on br-boi-01 diverges from package.', suggestion: 'review with device owner' },
+    ],
+  };
+}
+
+function installPreview(packageId = 'BranchPolicy') {
+  // Mimics the "diff before push" payload.
+  return {
+    packageId,
+    packageName: packageId,
+    version: 14,
+    previousVersion: 13,
+    generatedAt: new Date().toISOString(),
+    targets: [
+      { device: 'br-sea-01', added: 3, modified: 1, removed: 0, status: 'ok' },
+      { device: 'br-tac-01', added: 3, modified: 1, removed: 0, status: 'ok' },
+      { device: 'br-spk-01', added: 3, modified: 1, removed: 0, status: 'ok' },
+      { device: 'br-boi-01', added: 3, modified: 1, removed: 0, status: 'warning', note: 'offline - will queue' },
+    ],
+    changes: [
+      { kind: 'add', section: 'Policy', detail: 'Added rule 47: allow-guest-wifi-to-internet (Any → WAN1, :443/:80)' },
+      { kind: 'add', section: 'Policy', detail: 'Added rule 48: block-printer-to-internet (PRINTERS → WAN1, any)' },
+      { kind: 'add', section: 'Address', detail: 'Created object PRINTERS (group of 8 addresses)' },
+      { kind: 'modify', section: 'Policy', detail: 'Rule 12: changed action from "accept" to "accept with IPS profile corp-ips"' },
+    ],
+    impact: {
+      newRules: 2,
+      modifiedRules: 1,
+      newObjects: 1,
+      estimatedDowntimeSeconds: 0,
+    },
+  };
+}
+
+function driftDetail(device = 'br-sea-01') {
+  return {
+    device,
+    detectedAt: minsAgo(18),
+    severity: 'danger',
+    diffs: [
+      {
+        path: 'firewall.policy.12.action',
+        package: 'accept',
+        live: 'accept + ips-sensor=off',
+        note: 'IPS profile disabled on device. Re-enable or update package.',
+      },
+      {
+        path: 'system.dns.primary',
+        package: '10.0.0.53',
+        live: '8.8.8.8',
+        note: 'DNS manually changed on device.',
+      },
+      {
+        path: 'log.syslogd.server',
+        package: 'siem-01.internal',
+        live: '',
+        note: 'Syslog target removed on device. Logs are not being forwarded.',
+      },
+    ],
+  };
+}
+
+function cveDetail(cveId = 'CVE-2026-0142') {
+  const base = {
+    'CVE-2026-0142': {
+      id: 'CVE-2026-0142', severity: 'critical', score: 9.8, title: 'SSL-VPN heap overflow',
+      description: 'Pre-authentication remote code execution via crafted SSL-VPN request. Allows unauthenticated attacker to execute arbitrary code as root.',
+      affectedVersions: ['7.2.0 - 7.2.11', '7.4.0 - 7.4.4'],
+      fixedIn: '7.4.5',
+      affectedDevices: ['br-sea-01', 'br-boi-01', 'ot-plant-02'],
+      remediation: [
+        'Upgrade affected devices to 7.4.5 or later',
+        'If upgrade is not immediately possible, disable SSL-VPN service',
+        'Restrict SSL-VPN portal to trusted source IPs via local-in policy',
+      ],
+      references: ['https://www.fortiguard.com/psirt/FG-IR-26-01', 'https://nvd.nist.gov/vuln/detail/CVE-2026-0142'],
+    },
+  };
+  return base[cveId] || base['CVE-2026-0142'];
 }
 
 module.exports = {
@@ -257,4 +349,8 @@ module.exports = {
   activityFeed,
   policyPackages,
   tasks,
+  analyzerFindings,
+  installPreview,
+  driftDetail,
+  cveDetail,
 };
