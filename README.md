@@ -4,6 +4,10 @@ A friendlier front end for FortiManager. Wraps the FMG JSON-RPC API in a keyboar
 
 **Version:** 0.1.0
 
+> **⚠️ Independent project — not a Fortinet GitHub account.**
+>
+> This repository is **not** a Fortinet GitHub account, repository, or product. FMG Console is built and maintained independently by [Tanner Harrison](https://tannerharrison.com) and is **not** endorsed, sponsored, reviewed, or supported by Fortinet, Inc. Views and code here are the maintainer's own and do not represent any employer. All Fortinet product names, trademarks, and logos are property of Fortinet, Inc. For authoritative FortiManager documentation, see [docs.fortinet.com](https://docs.fortinet.com).
+
 ## Stack
 
 - **Backend:** Node.js + Express (CommonJS), axios for FMG JSON-RPC, pino for logging, Supabase for auth
